@@ -17,7 +17,7 @@ import {
 interface CourseSidebarProps {
   activeTab: string
   onTabChange: (id: string) => void
-  role: 'Admin' | 'Student'
+  role: 'ORGANIZER' | 'TEACHER' | 'STUDENT'
 }
 
 export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarProps) {
@@ -53,8 +53,8 @@ export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarPro
             key={item.id}
             onClick={() => onTabChange(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === item.id
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
           >
             <item.icon size={20} className={activeTab === item.id ? 'text-white' : 'text-gray-400 dark:text-gray-500'} />
@@ -69,7 +69,7 @@ export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarPro
             className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <GraduationCap size={20} className="text-gray-400 dark:text-gray-500" />
+              <EducationIcon className="text-gray-400 dark:text-gray-500" />
               <span>Other Courses</span>
             </div>
             <motion.div
@@ -110,10 +110,14 @@ export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarPro
             </span>
           </div>
           <p className="text-sm font-semibold text-gray-900 dark:text-white">
-            {role === 'Admin' ? 'Faculty Admin' : 'Course Student'}
+            {role === 'ORGANIZER' ? 'Institution Admin' : role === 'TEACHER' ? 'Faculty Instructor' : 'Course Student'}
           </p>
         </div>
       </div>
     </aside>
   )
 }
+
+const EducationIcon = ({ className }: { className?: string }) => (
+  <GraduationCap size={20} className={className} />
+)

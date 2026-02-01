@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useParams } from 'react-router-dom'
 import {
   Calendar,
   Clock,
@@ -7,9 +8,13 @@ import {
   Circle,
   FileText,
   ArrowRight,
+  Loader2,
 } from 'lucide-react'
+import apiClient from '../api/client'
+
 type AssignmentStatus = 'Not Started' | 'In Progress' | 'Submitted' | 'Graded'
 type FilterType = 'all' | 'pending' | 'submitted' | 'graded'
+
 interface Assignment {
   id: string
   title: string
@@ -20,59 +25,88 @@ interface Assignment {
   maxPoints: number
   submittedDate?: string
 }
-const mockAssignments: Assignment[] = [
-  {
-    id: 'a1',
-    title: 'Essay: The Future of AI',
-    description:
-      'Write a 1500-word essay discussing the potential future developments in artificial intelligence and their societal implications.',
-    dueDate: 'Oct 15, 2025',
-    status: 'Graded',
-    grade: '92',
-    maxPoints: 100,
-    submittedDate: 'Oct 14, 2025',
-  },
-  {
-    id: 'a2',
-    title: 'Lab: Linear Regression',
-    description:
-      'Implement a linear regression model from scratch using Python. Submit your code and a brief report.',
-    dueDate: 'Oct 22, 2025',
-    status: 'Submitted',
-    maxPoints: 100,
-    submittedDate: 'Oct 21, 2025',
-  },
-  {
-    id: 'a3',
-    title: 'Project: Build a Classifier',
-    description:
-      'Create a machine learning classifier to categorize images. Use any framework of your choice.',
-    dueDate: 'Oct 29, 2025',
-    status: 'In Progress',
-    maxPoints: 150,
-  },
-  {
-    id: 'a4',
-    title: 'Quiz: Neural Networks Basics',
-    description:
-      'Complete the online quiz covering fundamental concepts of neural networks.',
-    dueDate: 'Nov 5, 2025',
-    status: 'Not Started',
-    maxPoints: 50,
-  },
-  {
-    id: 'a5',
-    title: 'Research Paper Review',
-    description:
-      'Read and summarize a recent AI research paper. Provide critical analysis and key takeaways.',
-    dueDate: 'Nov 12, 2025',
-    status: 'Not Started',
-    maxPoints: 100,
-  },
-]
+
 export function AssignmentsView() {
+  const { courseId } = useParams()
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>('all')
-  const filteredAssignments = mockAssignments.filter((assignment) => {
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        // Mock assignment data
+        const mockAssignments: Assignment[] = [
+          {
+            id: 'a1',
+            title: 'Programming Assignment 1',
+            description: 'Create a simple calculator application using the concepts learned in class.',
+            dueDate: '2026-02-15',
+            status: 'Submitted',
+            grade: '95',
+            maxPoints: 100,
+            submittedDate: '2026-02-10'
+          },
+          {
+            id: 'a2',
+            title: 'Data Structures Quiz',
+            description: 'Complete the online quiz covering arrays, linked lists, and hash maps.',
+            dueDate: '2026-02-22',
+            status: 'In Progress',
+            maxPoints: 50
+          },
+          {
+            id: 'a3',
+            title: 'Algorithm Analysis Project',
+            description: 'Analyze the time complexity of various sorting algorithms and write a report.',
+            dueDate: '2026-03-01',
+            status: 'Not Started',
+            maxPoints: 150
+          },
+          {
+            id: 'a4',
+            title: 'Midterm Exam Preparation',
+            description: 'Review all material covered in weeks 1-6 and complete practice problems.',
+            dueDate: '2026-03-10',
+            status: 'Not Started',
+            maxPoints: 200
+          },
+          {
+            id: 'a5',
+            title: 'Group Project Proposal',
+            description: 'Submit a 2-page proposal for your final group project including team members and timeline.',
+            dueDate: '2026-02-05',
+            status: 'Graded',
+            grade: '88',
+            maxPoints: 100,
+            submittedDate: '2026-02-04'
+          }
+        ];
+        setAssignments(mockAssignments);
+      } catch (err) {
+        console.error('Fetch assignments failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseId) fetchAssignments();
+  }, [courseId]);
+
+  const handleSubmit = async (assignmentId: string) => {
+    const fileUrl = prompt('Enter the URL of your submission (e.g. Google Drive/GitHub):')
+    if (!fileUrl) return
+
+    try {
+      await apiClient.post(`/assignments/${assignmentId}/submit`, { fileUrl })
+      alert('Assignment submitted successfully!')
+      window.location.reload() // Refresh to show status
+    } catch (err) {
+      alert('Submission failed. Please try again.')
+    }
+  }
+
+  const filteredAssignments = assignments.filter((assignment) => {
     if (filter === 'all') return true
     if (filter === 'pending')
       return (
@@ -83,12 +117,22 @@ export function AssignmentsView() {
     if (filter === 'graded') return assignment.status === 'Graded'
     return true
   })
+
   const getGradeColor = (grade: number) => {
     if (grade >= 90) return 'text-green-600'
     if (grade >= 80) return 'text-blue-600'
     if (grade >= 70) return 'text-amber-600'
     return 'text-red-600'
   }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-5xl">
       {/* Header */}
@@ -105,27 +149,27 @@ export function AssignmentsView() {
           {
             id: 'all',
             label: 'All',
-            count: mockAssignments.length,
+            count: assignments.length,
           },
           {
             id: 'pending',
             label: 'Pending',
-            count: mockAssignments.filter(
-              (a) => a.status === 'Not Started' || a.status === 'In Progress',
+            count: assignments.filter(
+              (a: any) => a.status === 'Not Started' || a.status === 'In Progress',
             ).length,
           },
           {
             id: 'submitted',
             label: 'Submitted',
-            count: mockAssignments.filter((a) => a.status === 'Submitted')
+            count: assignments.filter((a: any) => a.status === 'Submitted')
               .length,
           },
           {
             id: 'graded',
             label: 'Graded',
-            count: mockAssignments.filter((a) => a.status === 'Graded').length,
+            count: assignments.filter((a: any) => a.status === 'Graded').length,
           },
-        ].map((tab) => (
+        ].map((tab: any) => (
           <motion.button
             key={tab.id}
             onClick={() => setFilter(tab.id as FilterType)}
@@ -261,6 +305,7 @@ export function AssignmentsView() {
                   whileTap={{
                     scale: 0.95,
                   }}
+                  onClick={() => assignment.status === 'Not Started' && handleSubmit(assignment.id)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all ${assignment.status === 'Graded' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'}`}
                 >
                   {assignment.status === 'Graded' ? (

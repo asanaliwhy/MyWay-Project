@@ -8,16 +8,16 @@ interface OrgCardProps {
   org: Organization
 }
 const roleColors: Record<Role, string> = {
-  Admin: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
-  Member: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800',
-  Viewer: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700/30 dark:text-gray-400 dark:border-gray-600',
+  ORGANIZER: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
+  TEACHER: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800',
+  STUDENT: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700/30 dark:text-gray-400 dark:border-gray-600',
 }
 export function OrgCard({ org }: OrgCardProps) {
   const navigate = useNavigate()
 
   return (
     <motion.div
-      onClick={() => navigate('/course/cs101')}
+      onClick={() => navigate(`/organizations/${org.id}`)}
       className="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 cursor-pointer overflow-hidden transition-all duration-200"
       whileHover={{
         y: -4,

@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# Windows executables
+*.exe
+*.dll
+
+# IDEs
+.vscode/
+.idea/
+
+# Go build output
+bin/

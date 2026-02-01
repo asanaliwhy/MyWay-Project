@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { User, UserRole } from '../types/auth'
-import apiClient from '../api/client'
+import { User } from '../types/auth'
 
 interface AuthContextType {
     user: User | null
@@ -13,67 +12,41 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Mock user data - always logged in
+const mockUser: User = {
+    id: 'mock-user-id',
+    email: 'user@myway.com',
+    firstName: 'Demo',
+    lastName: 'User',
+    role: 'STUDENT',
+    avatar: 'https://ui-avatars.com/api/?name=Demo+User'
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
+    const [user, setUser] = useState<User | null>(mockUser)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
-        // Check local storage for existing session
-        const storedUser = localStorage.getItem('myway_user')
-        if (storedUser) {
-            setUser(JSON.parse(storedUser))
-        }
+        // Auto-login with mock user
+        setUser(mockUser)
         setIsLoading(false)
     }, [])
 
+    // Stub functions - do nothing since auth is disabled
     const login = async (email: string, password: string) => {
-        try {
-            const response = await apiClient.post('/auth/login', { email, password });
-            const { access_token, user } = response.data;
-
-            // Normalize user data to match frontend types
-            const cleanUser: User = {
-                id: user.id,
-                email: user.email,
-                firstName: user.name.split(' ')[0],
-                lastName: user.name.split(' ').slice(1).join(' ') || '',
-                role: user.memberships?.[0]?.role || 'Student', // Default to first role
-                avatar: `https://ui-avatars.com/api/?name=${user.name}`
-            };
-
-            setUser(cleanUser);
-            localStorage.setItem('myway_user', JSON.stringify(cleanUser));
-            localStorage.setItem('access_token', access_token);
-        } catch (error) {
-            console.error('Login failed:', error);
-            throw error;
-        }
+        setUser(mockUser)
     }
 
     const register = async (userDetails: Omit<User, 'id' | 'avatar'> & { password: string }) => {
-        try {
-            const response = await apiClient.post('/auth/register', {
-                email: userDetails.email,
-                name: `${userDetails.firstName} ${userDetails.lastName}`,
-                pass: userDetails.password
-            });
-
-            // Auto login after register
-            await login(userDetails.email, userDetails.password);
-        } catch (error) {
-            console.error('Registration failed:', error);
-            throw error;
-        }
+        setUser(mockUser)
     }
 
     const logout = () => {
-        setUser(null)
-        localStorage.removeItem('myway_user')
-        localStorage.removeItem('access_token')
+        // Do nothing - stay logged in with mock user
     }
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, isAuthenticated: true, isLoading, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     )

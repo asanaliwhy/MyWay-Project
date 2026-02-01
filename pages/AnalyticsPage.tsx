@@ -1,16 +1,47 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { OrgTopBar } from '../components/OrgTopBar'
 import { OrgSidebar } from '../components/OrgSidebar'
-import { BarChart2, TrendingUp, Clock, Award } from 'lucide-react'
+import { BarChart2, TrendingUp, Clock, Award, Loader2 } from 'lucide-react'
+import apiClient from '../api/client'
 
 export function AnalyticsPage() {
-    const stats = [
-        { label: 'Total Learning Time', value: '32h 15m', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100' },
-        { label: 'Completed Modules', value: '12', icon: Award, color: 'text-purple-600', bg: 'bg-purple-100' },
-        { label: 'Current Streak', value: '5 Days', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-100' },
-        { label: 'Average Score', value: '92%', icon: BarChart2, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-    ]
+    const [stats, setStats] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                // Mock analytics data
+                const mockData = {
+                    totalAttempts: 42,
+                    avgScore: 87.5,
+                    totalLearningTime: '48h 30m',
+                    currentStreak: 7
+                };
+
+                setStats([
+                    { label: 'Total Learning Time', value: mockData.totalLearningTime, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100' },
+                    { label: 'Quiz Attempts', value: mockData.totalAttempts.toString(), icon: Award, color: 'text-purple-600', bg: 'bg-purple-100' },
+                    { label: 'Current Streak', value: `${mockData.currentStreak} days`, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-100' },
+                    { label: 'Average Score', value: `${Math.round(mockData.avgScore)}%`, icon: BarChart2, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+                ]);
+            } catch (err) {
+                console.error('Failed to fetch analytics:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAnalytics();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">

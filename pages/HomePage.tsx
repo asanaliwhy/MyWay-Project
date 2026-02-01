@@ -134,7 +134,7 @@ export function HomePage() {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => navigate('/course/gravity')}
+                            onClick={() => navigate('/organizations')}
                             className="px-8 py-4 bg-white dark:bg-gray-800 border-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all flex items-center gap-3"
                         >
                             <BookOpen size={24} />
@@ -160,7 +160,7 @@ export function HomePage() {
                             className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all border border-gray-100 dark:border-gray-700"
                         >
                             <div
-                                className={`w - 14 h - 14 rounded - xl bg - gradient - to - br ${feature.color} flex items - center justify - center mb - 4 shadow - md`}
+                                className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-md`}
                             >
                                 <feature.icon size={28} className="text-white" />
                             </div>

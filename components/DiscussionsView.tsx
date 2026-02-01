@@ -1,26 +1,30 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useParams } from 'react-router-dom'
 import {
   MessageSquare,
   ThumbsUp,
   Reply,
   MoreHorizontal,
-  ChevronDown,
+  Loader2,
 } from 'lucide-react'
+import apiClient from '../api/client'
+
 interface DiscussionReply {
   id: string
   author: string
-  authorRole: 'Student' | 'Teacher' | 'TA'
+  authorRole: string
   avatar: string
   content: string
   timestamp: string
   likes: number
 }
+
 interface Discussion {
   id: string
   title: string
   author: string
-  authorRole: 'Student' | 'Teacher' | 'TA'
+  authorRole: string
   avatar: string
   content: string
   timestamp: string
@@ -28,94 +32,164 @@ interface Discussion {
   likes: number
   replyList?: DiscussionReply[]
 }
-const mockDiscussions: Discussion[] = [
-  {
-    id: 'd1',
-    title: 'Question about backpropagation algorithm',
-    author: 'Sarah Mitchell',
-    authorRole: 'Student',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    content:
-      'Can someone explain how the chain rule is applied in backpropagation? I understand the concept but struggling with the mathematical implementation.',
-    timestamp: '2 hours ago',
-    replies: 5,
-    likes: 12,
-    replyList: [
-      {
-        id: 'r1',
-        author: 'Dr. Sarah Chen',
-        authorRole: 'Teacher',
-        avatar:
-          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-        content:
-          'Great question! The chain rule in backpropagation works by computing gradients layer by layer. Let me break it down step by step...',
-        timestamp: '1 hour ago',
-        likes: 8,
-      },
-      {
-        id: 'r2',
-        author: 'Mike Johnson',
-        authorRole: 'TA',
-        avatar:
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-        content:
-          'I found this visualization really helpful when I was learning: [link]. It shows how gradients flow backwards through the network.',
-        timestamp: '45 min ago',
-        likes: 5,
-      },
-    ],
-  },
-  {
-    id: 'd2',
-    title: 'Project collaboration - looking for team members',
-    author: 'Alex Rivera',
-    authorRole: 'Student',
-    avatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-    content:
-      'Looking for 2-3 people to collaborate on the final project. Interested in building a recommendation system. Anyone want to join?',
-    timestamp: '5 hours ago',
-    replies: 8,
-    likes: 6,
-  },
-  {
-    id: 'd3',
-    title: 'Recommended resources for neural networks',
-    author: 'Dr. Sarah Chen',
-    authorRole: 'Teacher',
-    avatar:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-    content:
-      "I've compiled a list of excellent resources for understanding neural networks. These include video lectures, interactive demos, and research papers.",
-    timestamp: '1 day ago',
-    replies: 15,
-    likes: 34,
-  },
-  {
-    id: 'd4',
-    title: 'Assignment 2 clarification needed',
-    author: 'Emma Davis',
-    authorRole: 'Student',
-    avatar:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
-    content:
-      'For the linear regression lab, are we supposed to implement gradient descent from scratch or can we use library functions?',
-    timestamp: '2 days ago',
-    replies: 3,
-    likes: 9,
-  },
-]
+
 export function DiscussionsView() {
+  const { courseId } = useParams()
+  const [discussions, setDiscussions] = useState<Discussion[]>([])
+  const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const getRoleBadge = (role: 'Student' | 'Teacher' | 'TA') => {
-    const styles = {
+  const [replyText, setReplyText] = useState('')
+
+  const fetchDiscussions = async () => {
+    try {
+      // Mock discussion data
+      const mockDiscussions: Discussion[] = [
+        {
+          id: 'd1',
+          title: 'Question about Binary Search Trees',
+          author: 'Alice Chen',
+          authorRole: 'Student',
+          avatar: 'https://ui-avatars.com/api/?name=Alice+Chen',
+          content: 'Can someone explain the difference between balanced and unbalanced BSTs? I\'m having trouble understanding when to use each.',
+          timestamp: '2 days ago',
+          replies: 3,
+          likes: 12,
+          replyList: [
+            {
+              id: 'r1',
+              author: 'Prof. John Doe',
+              authorRole: 'Instructor',
+              avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4f46e5',
+              content: 'Great question! A balanced BST maintains a height of O(log n), ensuring efficient operations. An unbalanced BST can degrade to O(n) in worst case. AVL and Red-Black trees are self-balancing variants.',
+              timestamp: '1 day ago',
+              likes: 8
+            },
+            {
+              id: 'r2',
+              author: 'Bob Martinez',
+              authorRole: 'Student',
+              avatar: 'https://ui-avatars.com/api/?name=Bob+Martinez',
+              content: 'To add to that, you typically use balanced BSTs when you need guaranteed performance. Regular BSTs are simpler to implement but can have worst-case scenarios.',
+              timestamp: '1 day ago',
+              likes: 5
+            },
+            {
+              id: 'r3',
+              author: 'Alice Chen',
+              authorRole: 'Student',
+              avatar: 'https://ui-avatars.com/api/?name=Alice+Chen',
+              content: 'Thank you both! That makes much more sense now.',
+              timestamp: '20 hours ago',
+              likes: 2
+            }
+          ]
+        },
+        {
+          id: 'd2',
+          title: 'Study Group for Midterm',
+          author: 'Sarah Johnson',
+          authorRole: 'Student',
+          avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson',
+          content: 'Anyone interested in forming a study group for the upcoming midterm? Planning to meet on weekends at the library.',
+          timestamp: '3 days ago',
+          replies: 7,
+          likes: 18,
+          replyList: [
+            {
+              id: 'r4',
+              author: 'Mike Lee',
+              authorRole: 'Student',
+              avatar: 'https://ui-avatars.com/api/?name=Mike+Lee',
+              content: 'I\'m in! What time works best for everyone?',
+              timestamp: '3 days ago',
+              likes: 4
+            },
+            {
+              id: 'r5',
+              author: 'Emma Wilson',
+              authorRole: 'Student',
+              avatar: 'https://ui-avatars.com/api/?name=Emma+Wilson',
+              content: 'Count me in too! Saturday afternoons would be perfect for me.',
+              timestamp: '2 days ago',
+              likes: 3
+            }
+          ]
+        },
+        {
+          id: 'd3',
+          title: 'Assignment 2 Clarification',
+          author: 'David Park',
+          authorRole: 'Student',
+          avatar: 'https://ui-avatars.com/api/?name=David+Park',
+          content: 'For the second assignment, are we supposed to implement the hash table from scratch or can we use built-in libraries?',
+          timestamp: '5 hours ago',
+          replies: 1,
+          likes: 6,
+          replyList: [
+            {
+              id: 'r6',
+              author: 'Prof. John Doe',
+              authorRole: 'Instructor',
+              avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4f46e5',
+              content: 'Good question! You should implement it from scratch using arrays. This will help you understand the underlying mechanics better.',
+              timestamp: '3 hours ago',
+              likes: 8
+            }
+          ]
+        },
+        {
+          id: 'd4',
+          title: 'Recommended Resources',
+          author: 'Lisa Anderson',
+          authorRole: 'Student',
+          avatar: 'https://ui-avatars.com/api/?name=Lisa+Anderson',
+          content: 'What are some good resources for learning more about graph algorithms? The textbook is great but I\'d like additional practice problems.',
+          timestamp: '1 week ago',
+          replies: 5,
+          likes: 15,
+          replyList: []
+        }
+      ];
+      setDiscussions(mockDiscussions);
+    } catch (err) {
+      console.error('Failed to fetch discussions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (courseId) fetchDiscussions();
+  }, [courseId]);
+
+  const handlePostReply = async (threadId: string) => {
+    if (!replyText.trim()) return
+    try {
+      await apiClient.post(`/discussions/thread/${threadId}/reply`, { body: replyText })
+      setReplyText('')
+      fetchDiscussions() // Refresh
+    } catch (err) {
+      alert('Failed to post reply')
+    }
+  }
+
+  const getRoleBadge = (role: string) => {
+    const styles: any = {
       Teacher: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
       TA: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
       Student: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
     }
-    return styles[role]
+    return styles[role] || styles.Student
   }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl">
       {/* Header */}
@@ -128,7 +202,7 @@ export function DiscussionsView() {
 
       {/* Discussions List */}
       <div className="space-y-4">
-        {mockDiscussions.map((discussion, index) => (
+        {discussions.map((discussion: Discussion, index: number) => (
           <motion.div
             key={discussion.id}
             initial={{
@@ -229,7 +303,7 @@ export function DiscussionsView() {
                   className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
                 >
                   <div className="p-5 space-y-4">
-                    {discussion.replyList.map((reply) => (
+                    {discussion.replyList.map((reply: DiscussionReply) => (
                       <div key={reply.id} className="flex gap-3">
                         <img
                           src={reply.avatar}
@@ -265,18 +339,22 @@ export function DiscussionsView() {
                     {/* Reply Input */}
                     <div className="flex gap-3 pt-2">
                       <img
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
+                        src={`https://ui-avatars.com/api/?name=You`}
                         alt="You"
                         className="w-8 h-8 rounded-full flex-shrink-0"
                       />
                       <div className="flex-1">
                         <textarea
                           placeholder="Write a reply..."
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
                           className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                           rows={2}
                         />
                         <div className="flex justify-end mt-2">
-                          <button className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+                          <button
+                            onClick={() => handlePostReply(discussion.id)}
+                            className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                             Post Reply
                           </button>
                         </div>

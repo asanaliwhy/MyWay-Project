@@ -1,4 +1,4 @@
-export type Role = 'Admin' | 'Member' | 'Viewer'
+export type Role = 'ORGANIZER' | 'TEACHER' | 'STUDENT'
 
 export interface ActivityData {
   points: number[] // Array of values for the sparkline (0-100)
