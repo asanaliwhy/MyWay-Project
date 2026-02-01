@@ -8,10 +8,10 @@ import {
   Lock,
   Plus
 } from 'lucide-react'
-import { Module, Lesson, UserRole } from '../types/course'
+import { Module, Lesson, UserRole } from '../types'
 import { MaterialImportModal } from './MaterialImportModal'
-import { StudyPackView } from './StudyPackView'
-import { useStudyPacks } from '../context/StudyPackContext'
+import { StudyPackGenerator } from '../../ai-tutor/components/StudyPackGenerator'
+import { useStudyPacks } from '../../ai-tutor/context/StudyPackContext'
 
 interface ModuleAccordionProps {
   module: Module
@@ -151,7 +151,7 @@ export function ModuleAccordion({ module, courseId, index, role, onRefresh }: Mo
                     AI-Generated Study Packs
                   </h4>
                   {studyPacks.map((studyPack) => (
-                    <StudyPackView
+                    <StudyPackGenerator
                       key={studyPack.id}
                       studyPack={studyPack}
                       onQuizComplete={(score, total) => {

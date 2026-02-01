@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { OrgTopBar } from '../components/OrgTopBar'
-import { OrgSidebar } from '../components/OrgSidebar'
+import { OrgTopBar } from '../features/organization/components/OrgTopBar'
+import { OrgSidebar } from '../features/organization/components/OrgSidebar'
 import { User, Bell, Moon } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 

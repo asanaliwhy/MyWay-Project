@@ -2,8 +2,8 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Users, MoreHorizontal, ArrowUpRight } from 'lucide-react'
-import { Organization, Role } from '../types/organization'
-import { ActivityIndicator } from './ActivityIndicator'
+import { Organization, Role } from '../types'
+import { ActivityIndicator } from '../../analytics/components/ActivityIndicator'
 interface OrgCardProps {
   org: Organization
 }

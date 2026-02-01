@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { BookOpen, Plus, Search, Filter, Loader2, ArrowRight } from 'lucide-react'
-import { OrgSidebar } from '../components/OrgSidebar'
-import { OrgTopBar } from '../components/OrgTopBar'
-import apiClient from '../api/client'
+import { OrgSidebar } from '../features/organization/components/OrgSidebar'
+import { OrgTopBar } from '../features/organization/components/OrgTopBar'
+import apiClient from '../lib/axios-client'
 
 export function OrgCoursesPage() {
     const { orgId } = useParams()

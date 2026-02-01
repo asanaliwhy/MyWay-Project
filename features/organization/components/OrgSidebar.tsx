@@ -1,54 +1,49 @@
-import React from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Building2, Home, Settings, PieChart, Users, Bell, LogOut } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../auth/context/AuthContext'
 
 export function OrgSidebar() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
 
+  const location = useLocation()
+
   const navItems = [
     {
       icon: Home,
       label: 'Home',
-      active: false,
       path: '/',
     },
     {
       icon: Building2,
       label: 'Organizations',
-      active: true,
       path: '/organizations',
     },
     {
       icon: PieChart,
       label: 'Analytics',
-      active: false,
       path: '/analytics',
     },
     {
       icon: Users,
       label: 'Team',
-      active: false,
       path: '/team',
     },
     {
       icon: Bell,
       label: 'Notifications',
-      active: false,
       path: '/notifications',
     },
     {
       icon: Settings,
       label: 'Settings',
-      active: false,
       path: '/settings',
     },
   ]
   return (
     <motion.aside
-      className="fixed left-0 top-0 h-full w-64 bg-indigo-950 text-indigo-100 flex flex-col border-r border-indigo-900 z-20 hidden md:flex"
+      className="fixed left-0 top-0 h-screen w-64 bg-indigo-950 text-indigo-100 flex flex-col border-r border-indigo-900 z-50 hidden md:flex"
       initial={{
         x: -256,
       }}
@@ -76,19 +71,25 @@ export function OrgSidebar() {
         <div className="px-3 mb-2 text-xs font-semibold text-indigo-400 uppercase tracking-wider">
           Platform
         </div>
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            onClick={() => item.path && navigate(item.path)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${item.active ? 'bg-indigo-800/50 text-white border-l-2 border-teal-500' : 'text-indigo-300/80 hover:bg-indigo-900/50 hover:text-white border-l-2 border-transparent cursor-pointer'}`}
-          >
-            <item.icon
-              size={18}
-              className={item.active ? 'text-teal-400' : 'text-indigo-400'}
-            />
-            {item.label}
-          </button>
-        ))}
+        {navItems.map((item) => {
+          const isActive = item.path === '/'
+            ? location.pathname === '/'
+            : location.pathname.startsWith(item.path)
+
+          return (
+            <button
+              key={item.label}
+              onClick={() => item.path && navigate(item.path)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-indigo-800/50 text-white border-l-2 border-teal-500' : 'text-indigo-300/80 hover:bg-indigo-900/50 hover:text-white border-l-2 border-transparent cursor-pointer'}`}
+            >
+              <item.icon
+                size={18}
+                className={isActive ? 'text-teal-400' : 'text-indigo-400'}
+              />
+              {item.label}
+            </button>
+          )
+        })}
       </nav>
 
       {/* Footer User Info */}

@@ -10,7 +10,7 @@ import {
     Sparkles,
     ArrowRight
 } from 'lucide-react'
-import { useStudyPacks } from '../context/StudyPackContext'
+import { useStudyPacks } from '../../ai-tutor/context/StudyPackContext'
 
 interface MaterialImportModalProps {
     isOpen: boolean
@@ -47,7 +47,7 @@ export function MaterialImportModal({ isOpen, onClose, courseId, moduleId, onSuc
             setStatus('generating')
 
             // Import material and generate study pack with Gemini AI
-            const { processMaterial, generateStudyPack } = await import('../services/StudyPackService')
+            const { processMaterial, generateStudyPack } = await import('../../ai-tutor/api/StudyPackService')
 
             // Process material (will use manual transcript if provided, otherwise placeholder)
             const material = await processMaterial(

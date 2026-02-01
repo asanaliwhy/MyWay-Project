@@ -8,7 +8,7 @@ import {
   MoreHorizontal,
   Loader2,
 } from 'lucide-react'
-import apiClient from '../api/client'
+import apiClient from '../../../lib/axios-client'
 
 interface DiscussionReply {
   id: string

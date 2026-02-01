@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../features/auth/context/AuthContext'
 import { User, Mail, Shield, Camera, Save } from 'lucide-react'
-import { OrgTopBar } from '../components/OrgTopBar'
-import { OrgSidebar } from '../components/OrgSidebar'
+import { OrgTopBar } from '../features/organization/components/OrgTopBar'
+import { OrgSidebar } from '../features/organization/components/OrgSidebar'
 
 export function ProfilePage() {
     const { user } = useAuth()

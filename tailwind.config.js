@@ -4,6 +4,7 @@ export default {
         "./index.html",
         "./pages/**/*.{tsx,ts}",
         "./components/**/*.{tsx,ts}",
+        "./features/**/*.{tsx,ts}",
         "./*.tsx",
     ],
     darkMode: 'class',

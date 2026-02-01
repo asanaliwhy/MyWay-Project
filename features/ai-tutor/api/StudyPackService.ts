@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { Material, StudyPack, Quiz, QuizQuestion, Flashcard } from '../types/studyPack'
+import { Material, StudyPack, Quiz, QuizQuestion, Flashcard } from '../types'
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
@@ -9,8 +9,8 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY)
-// Using gemini-3-pro-preview as requested
-const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' })
+// Using gemini-3-flash-preview as requested
+const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
 
 // Helper: Generate a unique ID
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`

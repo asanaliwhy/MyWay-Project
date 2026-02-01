@@ -10,7 +10,7 @@ import {
   ArrowRight,
   Loader2,
 } from 'lucide-react'
-import apiClient from '../api/client'
+import apiClient from '../../../lib/axios-client'
 
 type AssignmentStatus = 'Not Started' | 'In Progress' | 'Submitted' | 'Graded'
 type FilterType = 'all' | 'pending' | 'submitted' | 'graded'

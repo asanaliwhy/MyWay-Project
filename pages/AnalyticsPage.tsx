@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { OrgTopBar } from '../components/OrgTopBar'
-import { OrgSidebar } from '../components/OrgSidebar'
+import { OrgTopBar } from '../features/organization/components/OrgTopBar'
+import { OrgSidebar } from '../features/organization/components/OrgSidebar'
 import { BarChart2, TrendingUp, Clock, Award, Loader2 } from 'lucide-react'
-import apiClient from '../api/client'
+import apiClient from '../lib/axios-client'
 
 export function AnalyticsPage() {
     const [stats, setStats] = useState<any[]>([])

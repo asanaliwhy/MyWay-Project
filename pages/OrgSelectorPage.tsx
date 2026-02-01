@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Loader2, AlertCircle } from 'lucide-react'
-import { OrgSidebar } from '../components/OrgSidebar'
-import { OrgTopBar } from '../components/OrgTopBar'
-import { OrgCard } from '../components/OrgCard'
-import { Organization } from '../types/organization'
-import apiClient from '../api/client'
+import { OrgSidebar } from '../features/organization/components/OrgSidebar'
+import { OrgTopBar } from '../features/organization/components/OrgTopBar'
+import { OrgCard } from '../features/organization/components/OrgCard'
+import { Organization } from '../features/organization/types'
+import apiClient from '../lib/axios-client'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -64,7 +64,7 @@ export function OrgSelectorPage() {
           memberCount: 22000,
           activity: {
             points: [40, 55, 50, 75, 70, 82, 85],
-            trend: 'stable',
+            trend: 'neutral',
             label: 'Stable',
           },
           color: '#A41034',
@@ -110,7 +110,7 @@ export function OrgSelectorPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <OrgSidebar />
 
-      <div className="md:pl-64 flex flex-col min-h-screen transition-all duration-300">
+      <div className="md:pl-64 flex flex-col min-h-screen">
         <OrgTopBar />
 
         <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">

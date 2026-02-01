@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { OrgTopBar } from '../components/OrgTopBar'
-import { OrgSidebar } from '../components/OrgSidebar'
+import { OrgTopBar } from '../features/organization/components/OrgTopBar'
+import { OrgSidebar } from '../features/organization/components/OrgSidebar'
 import { UserPlus, MoreHorizontal, Mail } from 'lucide-react'
 
 export function TeamPage() {

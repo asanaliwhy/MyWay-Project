@@ -1,5 +1,5 @@
 import { ChevronRight, Bell, Search, ChevronDown } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../auth/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 interface CourseTopBarProps {
   courseName: string

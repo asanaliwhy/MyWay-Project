@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, RotateCcw, ArrowRight } from 'lucide-react'
-import { Flashcard, FlashcardSession as FlashcardSessionType } from '../types/studyPack'
+import { Flashcard, FlashcardSession as FlashcardSessionType } from '../../ai-tutor/types'
 
 interface FlashcardSessionProps {
     flashcards: Flashcard[]
@@ -76,12 +76,12 @@ export function FlashcardSession({ flashcards, studyPackId, onComplete, onCancel
                 className="text-center py-8 space-y-6"
             >
                 <div className={`w-24 h-24 rounded-full mx-auto flex items-center justify-center ${masteryRate >= 80 ? 'bg-green-100 dark:bg-green-900/30' :
-                        masteryRate >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/30' :
-                            'bg-orange-100 dark:bg-orange-900/30'
+                    masteryRate >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                        'bg-orange-100 dark:bg-orange-900/30'
                     }`}>
                     <span className={`text-4xl font-bold ${masteryRate >= 80 ? 'text-green-600 dark:text-green-400' :
-                            masteryRate >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
-                                'text-orange-600 dark:text-orange-400'
+                        masteryRate >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+                            'text-orange-600 dark:text-orange-400'
                         }`}>
                         {masteryRate}%
                     </span>
@@ -181,8 +181,8 @@ export function FlashcardSession({ flashcards, studyPackId, onComplete, onCancel
                         className="absolute inset-0 cursor-pointer"
                     >
                         <div className={`h-full rounded-2xl shadow-2xl border-2 flex flex-col items-center justify-center p-8 ${isFlipped
-                                ? 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800'
-                                : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800'
+                            ? 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800'
+                            : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800'
                             }`}>
                             <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4">
                                 {isFlipped ? 'Answer' : 'Question'}

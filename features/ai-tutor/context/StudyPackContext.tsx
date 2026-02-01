@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
-import { Material, StudyPack, QuizAttempt, FlashcardSession } from '../types/studyPack'
+import { Material, StudyPack, QuizAttempt, FlashcardSession } from '../types'
 
 interface StudyPackContextType {
     materials: Material[]

@@ -24,6 +24,14 @@ export interface Assignment {
   grade?: string
 }
 
+
+export interface SyllabusItem {
+  week: number
+  title: string
+  description: string
+  readings: string[]
+}
+
 export interface Course {
   id: string
   title: string
@@ -35,4 +43,5 @@ export interface Course {
   progress: number // 0-100
   modules: Module[]
   assignments: Assignment[]
+  syllabus: SyllabusItem[]
 }

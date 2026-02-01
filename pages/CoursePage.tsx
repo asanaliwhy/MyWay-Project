@@ -2,15 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
-import { CourseSidebar } from '../components/CourseSidebar'
-import { CourseTopBar } from '../components/CourseTopBar'
-import { CourseHeader } from '../components/CourseHeader'
-import { CourseOverview } from '../components/CourseOverview'
-import { ModuleAccordion } from '../components/ModuleAccordion'
-import { AssignmentsView } from '../components/AssignmentsView'
-import { DiscussionsView } from '../components/DiscussionsView'
-import { Course, UserRole } from '../types/course'
-import { useAuth } from '../context/AuthContext'
+import { CourseSidebar } from '../features/course/components/CourseSidebar'
+import { CourseTopBar } from '../features/course/components/CourseTopBar'
+import { CourseHeader } from '../features/course/components/CourseHeader'
+import { CourseOverview } from '../features/course/components/CourseOverview'
+import { ModuleAccordion } from '../features/course/components/ModuleAccordion'
+import { AssignmentsView } from '../features/course/components/AssignmentsView'
+import { DiscussionsView } from '../features/course/components/DiscussionsView'
+import { SyllabusView } from '../features/course/components/SyllabusView'
+import { CourseChatWidget } from '../features/ai-tutor/components/CourseChatWidget'
+import { Course, UserRole } from '../features/course/types'
+import { useAuth } from '../features/auth/context/AuthContext'
 
 export function CoursePage() {
   const { courseId } = useParams()
@@ -31,36 +33,33 @@ export function CoursePage() {
           code: 'CS101',
           instructor: 'Prof. John Doe',
           duration: '12 weeks',
-          description: 'Learn the fundamentals of programming and computer science',
-          objectives: [
-            'Master programming fundamentals',
-            'Understand data structures and algorithms',
-            'Build real-world applications',
-          ],
+          description: 'Learn the fundamentals of programming and computer science using Python.',
+          objectives: ['Master programming fundamentals', 'Understand data structures', 'Build real-world applications'],
           progress: 35,
+          syllabus: [
+            { week: 1, title: 'Introduction to Programming', description: 'Setup, Variables, and Types', readings: ['Ch 1: Intro'] },
+            { week: 2, title: 'Control Flow', description: 'Loops and Conditionals', readings: ['Ch 2: Logic'] },
+            { week: 3, title: 'Functions', description: 'Modular programming', readings: ['Ch 3: Functions'] },
+            { week: 4, title: 'Data Structures', description: 'Lists, Dictionaries, Sets', readings: ['Ch 4: Data'] }
+          ],
           modules: [
             {
-              id: 'mod1',
-              title: 'Introduction to Programming',
-              description: 'Learn the basics of programming',
+              id: 'm1', title: 'Week 1: Basics', description: 'Getting Started with Python',
               lessons: [
-                { id: 'L1', title: 'Variables and Data Types', type: 'video', duration: '15:30', completed: true },
-                { id: 'L2', title: 'Control Flow', type: 'reading', duration: '10:00', completed: false },
-              ],
+                { id: 'l1', title: 'Python Setup', type: 'video', duration: '10:00', completed: true },
+                { id: 'l2', title: 'Variables', type: 'reading', duration: '15:00', completed: true }
+              ]
             },
             {
-              id: 'mod2',
-              title: 'Data Structures',
-              description: 'Arrays, Lists, and Hash Maps',
+              id: 'm2', title: 'Week 2: Logic', description: 'Control Flow',
               lessons: [
-                { id: 'L3', title: 'Arrays', type: 'video', duration: '20:15', completed: false },
-                { id: 'L4', title: 'Linked Lists', type: 'video', duration: '18:45', completed: false },
-              ],
-            },
+                { id: 'l3', title: 'If Statements', type: 'video', duration: '20:00', completed: false },
+                { id: 'l4', title: 'Loops', type: 'video', duration: '25:00', completed: false }
+              ]
+            }
           ],
           assignments: [
-            { id: 'A1', title: 'Hello World Program', dueDate: '2026-02-15', status: 'Submitted', grade: 95 },
-            { id: 'A2', title: 'Data Structure Quiz', dueDate: '2026-02-22', status: 'In Progress', grade: undefined },
+            { id: 'A1', title: 'Python Calculator', dueDate: '2026-02-15', status: 'Submitted', grade: '95' }
           ],
         },
         'course-math221': {
@@ -69,61 +68,171 @@ export function CoursePage() {
           code: 'MATH221',
           instructor: 'Prof. Jane Smith',
           duration: '10 weeks',
-          description: 'Master vectors, matrices, and linear transformations',
-          objectives: [
-            'Understand vector spaces',
-            'Master matrix operations',
-            'Apply linear transformations',
-          ],
+          description: 'Master vectors, matrices, and linear transformations.',
+          objectives: ['Understand vector spaces', 'Master matrix operations', 'Apply linear transformations'],
           progress: 20,
+          syllabus: [
+            { week: 1, title: 'Vectors', description: 'Vector arithmetic and dot products', readings: ['Ch 1: Vectors'] },
+            { week: 2, title: 'Matrices', description: 'Matrix multiplication and properties', readings: ['Ch 2: Matrices'] },
+            { week: 3, title: 'Systems of Equations', description: 'Gaussian elimination', readings: ['Ch 3: Systems'] }
+          ],
           modules: [
             {
-              id: 'mod1',
-              title: 'Vectors',
-              description: 'Introduction to vectors',
+              id: 'm1', title: 'Week 1: Vectors', description: 'Introduction to Vectors',
               lessons: [
-                { id: 'L1', title: 'Vector Basics', type: 'video', duration: '25:00', completed: true },
-              ],
+                { id: 'l1', title: 'What is a Vector?', type: 'video', duration: '15:00', completed: true },
+                { id: 'l2', title: 'Dot Product', type: 'reading', duration: '20:00', completed: false }
+              ]
             },
+            {
+              id: 'm2', title: 'Week 2: Matrices', description: 'Matrix Operations',
+              lessons: [
+                { id: 'l3', title: 'Matrix Multiplication', type: 'video', duration: '30:00', completed: false }
+              ]
+            }
           ],
-          assignments: [
-            { id: 'A1', title: 'Vector Operations', dueDate: '2026-02-10', status: 'Not Started', grade: undefined },
+          assignments: []
+        },
+        'course-phys121': {
+          id: 'course-phys121',
+          title: 'Mechanics',
+          code: 'PHYS121',
+          instructor: 'Prof. Robert Johnson',
+          duration: '14 weeks',
+          description: 'Classical mechanics and Newton\'s laws.',
+          objectives: ['Master Newton\'s laws', 'Understand kinematics', 'Explore energy conservation'],
+          progress: 10,
+          syllabus: [
+            { week: 1, title: 'Kinematics 1D', description: 'Position, Velocity, Acceleration', readings: ['Ch 2: Motion'] },
+            { week: 2, title: 'Vectors & 2D Motion', description: 'Projectile Motion', readings: ['Ch 3: Vectors'] },
+            { week: 3, title: 'Newton\'s Laws', description: 'Forces and Mass', readings: ['Ch 4: Laws'] }
           ],
+          modules: [
+            {
+              id: 'm1', title: 'Week 1: Kinematics', description: 'Motion in 1D',
+              lessons: [{ id: 'l1', title: 'Velocity vs Speed', type: 'video', duration: '12:00', completed: true }]
+            },
+            {
+              id: 'm2', title: 'Week 2: 2D Motion', description: 'Vectors in Physics',
+              lessons: [{ id: 'l2', title: 'Projectile Motion', type: 'video', duration: '25:00', completed: false }]
+            }
+          ],
+          assignments: []
+        },
+        'course-6001': {
+          id: 'course-6001',
+          title: 'Introduction to EECS',
+          code: '6.001',
+          instructor: 'Prof. AI Researcher',
+          duration: '16 weeks',
+          description: 'Fundamentals of electrical engineering and computer science.',
+          objectives: ['Circuit design', 'Digital logic', 'Basic algorithms'],
+          progress: 5,
+          syllabus: [
+            { week: 1, title: 'PCBs & Circuits', description: 'Voltage, Current, Resistance', readings: ['Lab 1 Manual'] },
+            { week: 2, title: 'KCL & KVL', description: 'Circuit Analysis Laws', readings: ['Ch 2: Circuits'] }
+          ],
+          modules: [
+            {
+              id: 'm1', title: 'Week 1: Circuits', description: 'Basic Circuit Theory',
+              lessons: [{ id: 'l1', title: 'Ohm\'s Law', type: 'video', duration: '18:00', completed: false }]
+            }
+          ],
+          assignments: []
+        },
+        'course-8041': {
+          id: 'course-8041',
+          title: 'Quantum Physics',
+          code: '8.04',
+          instructor: 'Prof. Quantum Expert',
+          duration: '14 weeks',
+          description: 'Introduction to quantum mechanics.',
+          objectives: ['Wave functions', 'Schrodinger equation', 'Quantum states'],
+          progress: 0,
+          syllabus: [
+            { week: 1, title: 'Experimental Basis', description: 'Photoelectric effect, wave-particle duality', readings: ['Ch 1: Quantum Origins'] },
+            { week: 2, title: 'The Wave Function', description: 'Interpretation and properties', readings: ['Ch 2: Waves'] }
+          ],
+          modules: [
+            {
+              id: 'm1', title: 'Week 1: Origins', description: 'Why Quantum?',
+              lessons: [{ id: 'l1', title: 'Photoelectric Effect', type: 'video', duration: '22:00', completed: false }]
+            }
+          ],
+          assignments: []
+        },
+        'course-stat110': {
+          id: 'course-stat110',
+          title: 'Probability',
+          code: 'STAT110',
+          instructor: 'Prof. Joe Blitzstein',
+          duration: '12 weeks',
+          description: 'Introduction to probability theory.',
+          objectives: ['Random variables', 'Distributions', 'Bayes Theorem'],
+          progress: 0,
+          syllabus: [
+            { week: 1, title: 'Counting', description: 'Permutations and Combinations', readings: ['Ch 1: Counting'] },
+            { week: 2, title: 'Conditional Probability', description: 'Bayes Rule', readings: ['Ch 2: Conditionals'] }
+          ],
+          modules: [
+            {
+              id: 'm1', title: 'Week 1: Counting', description: 'The Basics of Counting',
+              lessons: [{ id: 'l1', title: 'Multiplication Rule', type: 'video', duration: '15:00', completed: false }]
+            }
+          ],
+          assignments: []
+        },
+        'course-cloud': {
+          id: 'course-cloud',
+          title: 'Cloud Computing',
+          code: 'CLOUD101',
+          instructor: 'Google Cloud Team',
+          duration: '6 weeks',
+          description: 'Master Google Cloud Platform basics.',
+          objectives: ['Understand Cloud concepts', 'Navigate GCP', 'Deploy simple apps'],
+          progress: 0,
+          syllabus: [
+            { week: 1, title: 'Cloud Concepts', description: 'IaaS, PaaS, SaaS', readings: ['GCP Whitepaper'] },
+            { week: 2, title: 'GCP Core Services', description: 'Compute, Storage, Network', readings: ['GCP Docs'] }
+          ],
+          modules: [
+            {
+              id: 'm1', title: 'Week 1: Intro', description: 'Welcome to Cloud',
+              lessons: [{ id: 'l1', title: 'What is Cloud?', type: 'video', duration: '08:00', completed: false }]
+            }
+          ],
+          assignments: []
         },
         'course-cs50': {
           id: 'course-cs50',
-          title: 'Introduction to Computer Science',
+          title: 'CS50: Intro to CS',
           code: 'CS50',
           instructor: 'Prof. David Malan',
           duration: '12 weeks',
-          description: 'Harvard\'s introduction to computer science',
-          objectives: [
-            'Learn fundamental CS concepts',
-            'Build practical projects',
-            'Master problem solving',
-          ],
+          description: 'Harvard\'s introduction to the intellectual enterprises of computer science.',
+          objectives: ['Learn C, Python, SQL', 'Web Development', 'Algorithms'],
           progress: 45,
+          syllabus: [
+            { week: 0, title: 'Scratch', description: 'Computational Thinking', readings: ['Notes Week 0'] },
+            { week: 1, title: 'C', description: 'Syntax, Compilers, Loops', readings: ['Notes Week 1'] },
+            { week: 2, title: 'Arrays', description: 'Compiling, Debugging, Memory', readings: ['Notes Week 2'] }
+          ],
           modules: [
             {
-              id: 'mod1',
-              title: 'Week 0: Scratch',
-              description: 'Introduction to programming with Scratch',
+              id: 'mod1', title: 'Week 0: Scratch', description: 'Visual Programming',
               lessons: [
-                { id: 'L1', title: 'Scratch Basics', type: 'video', duration: '90:00', completed: true },
+                { id: 'L1', title: 'Lecture 0', type: 'video', duration: '90:00', completed: true },
               ],
             },
             {
-              id: 'mod2',
-              title: 'Week 1: C',
-              description: 'Introduction to C programming',
+              id: 'mod2', title: 'Week 1: C', description: 'Low level programming',
               lessons: [
-                { id: 'L2', title: 'C Language Basics', type: 'video', duration: '120:00', completed: false },
+                { id: 'L2', title: 'Lecture 1', type: 'video', duration: '120:00', completed: false },
               ],
             },
           ],
           assignments: [
-            { id: 'A1', title: 'Problem Set 0', dueDate: '2026-02-05', status: 'Submitted', grade: 100 },
-            { id: 'A2', title: 'Problem Set 1', dueDate: '2026-02-12', status: 'In Progress', grade: undefined },
+            { id: 'A1', title: 'Problem Set 0', dueDate: '2026-02-05', status: 'Submitted', grade: '100' },
           ],
         },
         'course-ml': {
@@ -132,35 +241,30 @@ export function CoursePage() {
           code: 'ML101',
           instructor: 'Google AI Team',
           duration: '8 weeks',
-          description: 'Learn machine learning with Google experts',
-          objectives: [
-            'Understand ML fundamentals',
-            'Build ML models',
-            'Deploy ML applications',
-          ],
+          description: 'Fast-paced, practical introduction to machine learning.',
+          objectives: ['Framing ML problems', 'Building neural nets', 'Real-world ML'],
           progress: 60,
+          syllabus: [
+            { week: 1, title: 'ML Concepts', description: 'Label, Feature, Model', readings: ['Framing'] },
+            { week: 2, title: 'Descending into ML', description: 'Linear Regression', readings: ['Descent'] }
+          ],
           modules: [
             {
-              id: 'mod1',
-              title: 'Introduction to ML',
-              description: 'What is Machine Learning?',
+              id: 'mod1', title: 'Module 1: Intro', description: 'What is ML?',
               lessons: [
-                { id: 'L1', title: 'ML Basics', type: 'video', duration: '30:00', completed: true },
-                { id: 'L2', title: 'Types of ML', type: 'reading', duration: '15:00', completed: true },
+                { id: 'L1', title: 'Introduction', type: 'video', duration: '05:00', completed: true },
+                { id: 'L2', title: 'Framing', type: 'reading', duration: '15:00', completed: true },
               ],
             },
             {
-              id: 'mod2',
-              title: 'Neural Networks',
-              description: 'Deep learning fundamentals',
+              id: 'mod2', title: 'Module 2: Regression', description: 'Predicting values',
               lessons: [
-                { id: 'L3', title: 'Neural Network Basics', type: 'video', duration: '45:00', completed: false },
+                { id: 'L3', title: 'Linear Regression', type: 'video', duration: '20:00', completed: false },
               ],
             },
           ],
           assignments: [
-            { id: 'A1', title: 'ML Model Training', dueDate: '2026-02-20', status: 'Submitted', grade: 92 },
-            { id: 'A2', title: 'Neural Network Project', dueDate: '2026-02-27', status: 'Not Started', grade: undefined },
+            { id: 'A1', title: 'Model Training Lab', dueDate: '2026-02-20', status: 'Submitted', grade: '92' },
           ],
         },
       };
@@ -247,9 +351,11 @@ export function CoursePage() {
 
             {activeTab === 'assignments' && <AssignmentsView />}
             {activeTab === 'discussions' && <DiscussionsView />}
+            {activeTab === 'syllabus' && <SyllabusView syllabus={course.syllabus || []} />}
           </motion.div>
         </main>
       </div>
+      <CourseChatWidget courseTitle={course.title} />
     </div>
   )
 }

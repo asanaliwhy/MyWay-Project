@@ -10,8 +10,8 @@ import {
     Loader2,
     AlertCircle
 } from 'lucide-react'
-import apiClient from '../../api/client'
-import { OrgTopBar } from '../../components/OrgTopBar'
+import apiClient from '../../lib/axios-client'
+import { OrgTopBar } from '../../features/organization/components/OrgTopBar'
 
 export function StudyPage() {
     const { materialId } = useParams()
@@ -66,6 +66,18 @@ export function StudyPage() {
         )
     }
 
+
+    if (!loading && !error && !studyPack) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
+                <div className="text-center">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Content Unavailable</h2>
+                    <button onClick={() => navigate(-1)} className="text-indigo-600 hover:underline">Go Back</button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
             <OrgTopBar />
@@ -81,7 +93,7 @@ export function StudyPage() {
                     </button>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {studyPack.material?.title || 'Study Session'}
+                            {studyPack?.material?.title || 'Study Session'}
                         </h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Powered by AI Analysis</p>
                     </div>
@@ -125,7 +137,7 @@ export function StudyPage() {
                                     Key Takeaways
                                 </h2>
                                 <ul className="space-y-4">
-                                    {(studyPack.summary?.content?.bullets || []).map((bullet: string, i: number) => (
+                                    {(studyPack?.summary?.content?.bullets || []).map((bullet: string, i: number) => (
                                         <li key={i} className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
                                             {bullet}
                                         </li>
@@ -134,18 +146,18 @@ export function StudyPage() {
                                 <div className="mt-12 bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
                                     <h3 className="text-indigo-900 dark:text-indigo-300 font-bold mb-2">Concept Deep Dive</h3>
                                     <p className="text-indigo-800 dark:text-indigo-400 leading-relaxed">
-                                        {studyPack.summary?.content?.summary}
+                                        {studyPack?.summary?.content?.summary}
                                     </p>
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'quiz' && (
-                            <QuizInteraction quiz={studyPack.quizzes?.[0]} />
+                            <QuizInteraction quiz={studyPack?.quizzes?.[0]} />
                         )}
 
                         {activeTab === 'flashcards' && (
-                            <FlashcardInteraction flashcards={studyPack.flashcards || []} />
+                            <FlashcardInteraction flashcards={studyPack?.flashcards || []} />
                         )}
                     </motion.div>
                 </AnimatePresence>

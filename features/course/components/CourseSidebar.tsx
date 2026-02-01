@@ -29,10 +29,11 @@ export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarPro
     { id: 'modules', label: 'Modules', icon: BookOpen },
     { id: 'assignments', label: 'Assignments', icon: FileText },
     { id: 'discussions', label: 'Discussions', icon: MessageSquare },
+    { id: 'syllabus', label: 'Syllabus', icon: FileText },
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col z-20 transition-colors duration-300">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col z-50 transition-colors duration-300 hidden md:flex">
       {/* Header */}
       <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div

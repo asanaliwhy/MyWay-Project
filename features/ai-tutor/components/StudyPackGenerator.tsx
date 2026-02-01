@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Brain, Zap, Check, X } from 'lucide-react'
-import { StudyPack } from '../types/studyPack'
-import { QuizSession } from './QuizSession'
-import { FlashcardSession } from './FlashcardSession'
+import { StudyPack } from '../types'
+import { QuizSession } from '../../study-mode/components/QuizSession'
+import { FlashcardSession } from '../../study-mode/components/FlashcardSession'
 
-interface StudyPackViewProps {
+interface StudyPackGeneratorProps {
     studyPack: StudyPack
     onQuizComplete?: (score: number, total: number) => void
     onFlashcardComplete?: (known: number, unknown: number) => void
 }
 
-export function StudyPackView({ studyPack, onQuizComplete, onFlashcardComplete }: StudyPackViewProps) {
+export function StudyPackGenerator({ studyPack, onQuizComplete, onFlashcardComplete }: StudyPackGeneratorProps) {
     const [activeTab, setActiveTab] = useState<'summary' | 'quiz' | 'flashcards'>('summary')
     const [showQuiz, setShowQuiz] = useState(false)
     const [showFlashcards, setShowFlashcards] = useState(false)

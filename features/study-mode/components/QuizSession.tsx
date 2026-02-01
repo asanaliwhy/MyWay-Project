@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check, X, Clock, ArrowRight, RotateCcw } from 'lucide-react'
-import { Quiz, QuizAttempt } from '../types/studyPack'
+import { Quiz, QuizAttempt } from '../../ai-tutor/types'
 
 interface QuizSessionProps {
     quiz: Quiz
@@ -82,12 +82,12 @@ export function QuizSession({ quiz, studyPackId, onComplete, onCancel }: QuizSes
                 {/* Results Header */}
                 <div className="text-center py-8 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
                     <div className={`w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center ${percentage >= 80 ? 'bg-green-100 dark:bg-green-900/30' :
-                            percentage >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/30' :
-                                'bg-red-100 dark:bg-red-900/30'
+                        percentage >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/30' :
+                            'bg-red-100 dark:bg-red-900/30'
                         }`}>
                         <span className={`text-4xl font-bold ${percentage >= 80 ? 'text-green-600 dark:text-green-400' :
-                                percentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
-                                    'text-red-600 dark:text-red-400'
+                            percentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+                                'text-red-600 dark:text-red-400'
                             }`}>
                             {percentage}%
                         </span>
@@ -113,8 +113,8 @@ export function QuizSession({ quiz, studyPackId, onComplete, onCancel }: QuizSes
                             <div
                                 key={question.id}
                                 className={`p-4 rounded-xl border-2 ${isCorrect
-                                        ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10'
-                                        : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10'
+                                    ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10'
+                                    : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10'
                                     }`}
                             >
                                 <div className="flex items-start gap-3 mb-3">
@@ -139,10 +139,10 @@ export function QuizSession({ quiz, studyPackId, onComplete, onCancel }: QuizSes
                                                     <div
                                                         key={oIndex}
                                                         className={`px-4 py-2 rounded-lg text-sm ${isCorrectAnswer
-                                                                ? 'bg-green-100 dark:bg-green-900/20 text-green-900 dark:text-green-100 font-medium'
-                                                                : isUserAnswer
-                                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-900 dark:text-red-100'
-                                                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                                            ? 'bg-green-100 dark:bg-green-900/20 text-green-900 dark:text-green-100 font-medium'
+                                                            : isUserAnswer
+                                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-900 dark:text-red-100'
+                                                                : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                                                             }`}
                                                     >
                                                         {option}
@@ -232,14 +232,14 @@ export function QuizSession({ quiz, studyPackId, onComplete, onCancel }: QuizSes
                             key={index}
                             onClick={() => handleAnswerSelect(currentQuestion, index)}
                             className={`w-full text-left px-6 py-4 rounded-xl border-2 transition-all ${selectedAnswers[currentQuestion] === index
-                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-100'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 text-gray-700 dark:text-gray-300'
+                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-100'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 text-gray-700 dark:text-gray-300'
                                 }`}
                         >
                             <div className="flex items-center gap-3">
                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedAnswers[currentQuestion] === index
-                                        ? 'border-indigo-500 bg-indigo-500'
-                                        : 'border-gray-300 dark:border-gray-600'
+                                    ? 'border-indigo-500 bg-indigo-500'
+                                    : 'border-gray-300 dark:border-gray-600'
                                     }`}>
                                     {selectedAnswers[currentQuestion] === index && (
                                         <Check size={16} className="text-white" />
