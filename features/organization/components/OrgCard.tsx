@@ -1,19 +1,20 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Users, MoreHorizontal, ArrowUpRight } from 'lucide-react'
+import { Users, MoreHorizontal, ArrowUpRight, Trash2 } from 'lucide-react'
 import { Organization, Role } from '../types'
 import { ActivityIndicator } from '../../analytics/components/ActivityIndicator'
 interface OrgCardProps {
   org: Organization
   onSelect?: (org: Organization) => void
+  onDelete?: (org: Organization) => void
 }
 const roleColors: Record<Role, string> = {
   ORGANIZER: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
   TEACHER: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800',
   STUDENT: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700/30 dark:text-gray-400 dark:border-gray-600',
 }
-export function OrgCard({ org, onSelect }: OrgCardProps) {
+export function OrgCard({ org, onSelect, onDelete }: OrgCardProps) {
   const navigate = useNavigate()
   const cardColor = org.color || '#4F46E5'
   const activityPoints = org.activity?.points || [40, 50, 60, 55, 65, 70, 75]
@@ -69,14 +70,29 @@ export function OrgCard({ org, onSelect }: OrgCardProps) {
           </div>
         </div>
 
-        <button
-          onClick={(e: React.MouseEvent) => {
-            e.stopPropagation()
-          }}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-        >
-          <MoreHorizontal size={16} />
-        </button>
+        <div className="flex items-center gap-1">
+          {org.canDelete && onDelete && (
+            <button
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                onDelete(org)
+              }}
+              className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Delete organization"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
+          <button
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation()
+            }}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+            title="Organization menu"
+          >
+            <MoreHorizontal size={16} />
+          </button>
+        </div>
       </div>
 
       <div className="flex items-end justify-between mt-6 pt-4 border-t border-gray-50 dark:border-gray-700">

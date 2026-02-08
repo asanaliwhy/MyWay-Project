@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { CourseSidebar } from '../features/course/components/CourseSidebar'
@@ -9,13 +9,13 @@ import { CourseOverview } from '../features/course/components/CourseOverview'
 import { ModuleAccordion } from '../features/course/components/ModuleAccordion'
 import { AssignmentsView } from '../features/course/components/AssignmentsView'
 import { DiscussionsView } from '../features/course/components/DiscussionsView'
-import { SyllabusView } from '../features/course/components/SyllabusView'
 import { CourseChatWidget } from '../features/ai-tutor/components/CourseChatWidget'
 import { Course, UserRole } from '../features/course/types'
 import { useAuth } from '../features/auth/context/AuthContext'
 
 const buildFallbackCourse = (id: string, role: UserRole): Course => {
   const lowerId = id.toLowerCase()
+  const isCloudCourse = lowerId.includes('cloud101') || lowerId.includes('cloud')
 
   const preset = (() => {
     if (lowerId.includes('cs101')) return { code: 'CS101', title: 'Introduction to Computer Science', instructor: 'Prof. John Doe' }
@@ -37,26 +37,40 @@ const buildFallbackCourse = (id: string, role: UserRole): Course => {
     }
   })()
 
-  return {
-    id,
-    title: preset.title,
-    code: preset.code,
-    instructor: preset.instructor,
-    duration: '12 weeks',
-    description: `${preset.title} course workspace with overview, modules, assignments, discussions, and syllabus content ready for interaction.`,
-    objectives: [
-      'Understand core concepts and practical workflows',
-      'Complete module activities and assignments',
-      'Use discussions and AI tutor support for faster learning',
-    ],
-    progress: role === 'STUDENT' ? 48 : 0,
-    syllabus: [
-      { week: 1, title: 'Foundations', description: 'Core concepts and orientation', readings: ['Week 1 Reading Pack'] },
-      { week: 2, title: 'Practice & Labs', description: 'Hands-on guided activities', readings: ['Lab Guide'] },
-      { week: 3, title: 'Assessment', description: 'Assignment and review', readings: ['Assessment Rubric'] },
-      { week: 4, title: 'Project Sprint', description: 'Apply concepts in a mini-project', readings: ['Project Brief'] },
-    ],
-    modules: [
+  const fallbackModules: Course['modules'] = isCloudCourse
+    ? [
+      {
+        id: `${id}-m1`,
+        title: 'Module 1: Cloud Foundations',
+        description: 'Core cloud concepts and service models',
+        lessons: [
+          { id: `${id}-l1`, title: 'Cloud Computing Overview', type: 'video', duration: '14:00', completed: true },
+          { id: `${id}-l2`, title: 'IaaS, PaaS, and SaaS Models', type: 'reading', duration: '16:00', completed: role === 'STUDENT' },
+          { id: `${id}-l3`, title: 'Public, Private, and Hybrid Cloud', type: 'video', duration: '12:00', completed: false },
+        ],
+      },
+      {
+        id: `${id}-m2`,
+        title: 'Module 2: Cloud Infrastructure',
+        description: 'Compute, storage, and networking fundamentals',
+        lessons: [
+          { id: `${id}-l4`, title: 'Virtual Machines and Containers', type: 'video', duration: '20:00', completed: false },
+          { id: `${id}-l5`, title: 'Cloud Storage Patterns', type: 'reading', duration: '15:00', completed: false },
+          { id: `${id}-l6`, title: 'Virtual Networks and Security Groups', type: 'quiz', duration: '10:00', completed: false },
+        ],
+      },
+      {
+        id: `${id}-m3`,
+        title: 'Module 3: Operations and Reliability',
+        description: 'Monitoring, scaling, and cost optimization',
+        lessons: [
+          { id: `${id}-l7`, title: 'Observability and Monitoring', type: 'video', duration: '13:00', completed: false },
+          { id: `${id}-l8`, title: 'Auto Scaling and High Availability', type: 'reading', duration: '17:00', completed: false },
+          { id: `${id}-l9`, title: 'Cloud Cost Governance', type: 'quiz', duration: '9:00', completed: false },
+        ],
+      },
+    ]
+    : [
       {
         id: `${id}-m1`,
         title: 'Module 1: Introduction',
@@ -84,7 +98,28 @@ const buildFallbackCourse = (id: string, role: UserRole): Course => {
           { id: `${id}-l6`, title: 'Submission Checklist', type: 'video', duration: '08:00', completed: false },
         ],
       },
+    ]
+
+  return {
+    id,
+    title: preset.title,
+    code: preset.code,
+    instructor: preset.instructor,
+    duration: '12 weeks',
+    description: `${preset.title} course workspace with overview, modules, assignments, discussions, and syllabus content ready for interaction.`,
+    objectives: [
+      'Understand core concepts and practical workflows',
+      'Complete module activities and assignments',
+      'Use discussions and AI tutor support for faster learning',
     ],
+    progress: role === 'STUDENT' ? 48 : 0,
+    syllabus: [
+      { week: 1, title: 'Foundations', description: 'Core concepts and orientation', readings: ['Week 1 Reading Pack'] },
+      { week: 2, title: 'Practice & Labs', description: 'Hands-on guided activities', readings: ['Lab Guide'] },
+      { week: 3, title: 'Assessment', description: 'Assignment and review', readings: ['Assessment Rubric'] },
+      { week: 4, title: 'Project Sprint', description: 'Apply concepts in a mini-project', readings: ['Project Brief'] },
+    ],
+    modules: fallbackModules,
     assignments: [
       { id: `${id}-a1`, title: 'Assignment 1: Practical Task', dueDate: '2026-03-01', status: 'In Progress' },
       { id: `${id}-a2`, title: 'Assignment 2: Reflection', dueDate: '2026-03-10', status: 'Not Started' },
@@ -94,17 +129,46 @@ const buildFallbackCourse = (id: string, role: UserRole): Course => {
 
 export function CoursePage() {
   const { courseId } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { user } = useAuth()
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
+
+  const allowedTabs = ['overview', 'modules', 'assignments', 'discussions'] as const
+  const resolveTab = (tabValue: string | null) => (
+    allowedTabs.includes((tabValue || '').toLowerCase() as (typeof allowedTabs)[number])
+      ? (tabValue || 'overview').toLowerCase()
+      : 'overview'
+  )
+
+  const [activeTab, setActiveTab] = useState(resolveTab(searchParams.get('tab')))
   const [role] = useState<UserRole>((user?.role as UserRole) || 'STUDENT')
+
+  const handleTabChange = (nextTab: string) => {
+    const normalized = resolveTab(nextTab)
+    setActiveTab(normalized)
+
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+      if (normalized === 'overview') {
+        params.delete('tab')
+      } else {
+        params.set('tab', normalized)
+      }
+      return params
+    })
+  }
+
+  useEffect(() => {
+    const tabFromUrl = resolveTab(searchParams.get('tab'))
+    setActiveTab((prev) => (prev === tabFromUrl ? prev : tabFromUrl))
+  }, [searchParams])
 
   const fetchCourseData = useCallback(async () => {
     if (!courseId) return
     try {
-      // Mock comprehensive course data
-      const mockCourses: Record<string, Course> = {
+      // Comprehensive catalog seed data
+      const catalogCourses: Record<string, Course> = {
         'course-cs101': {
           id: 'course-cs101',
           title: 'Introduction to Computer Science',
@@ -262,22 +326,44 @@ export function CoursePage() {
         },
         'course-cloud': {
           id: 'course-cloud',
-          title: 'Cloud Computing',
+          title: 'Cloud Computing Fundamentals',
           code: 'CLOUD101',
           instructor: 'Google Cloud Team',
-          duration: '6 weeks',
-          description: 'Master Google Cloud Platform basics.',
-          objectives: ['Understand Cloud concepts', 'Navigate GCP', 'Deploy simple apps'],
+          duration: '8 weeks',
+          description: 'Master cloud foundations across infrastructure, networking, operations, and cost optimization.',
+          objectives: ['Understand cloud service models', 'Design resilient cloud architecture', 'Apply security and cost best practices'],
           progress: 0,
           syllabus: [
-            { week: 1, title: 'Cloud Concepts', description: 'IaaS, PaaS, SaaS', readings: ['GCP Whitepaper'] },
-            { week: 2, title: 'GCP Core Services', description: 'Compute, Storage, Network', readings: ['GCP Docs'] }
+            { week: 1, title: 'Cloud Concepts', description: 'IaaS, PaaS, SaaS, and deployment models', readings: ['Cloud Fundamentals Handbook'] },
+            { week: 2, title: 'Core Services', description: 'Compute, Storage, and Networking', readings: ['Provider Service Catalog'] },
+            { week: 3, title: 'Security & Reliability', description: 'IAM, encryption, and high availability', readings: ['Cloud Security Baseline'] },
+            { week: 4, title: 'Operations & Cost', description: 'Monitoring, autoscaling, and FinOps', readings: ['Operations Runbook'] }
           ],
           modules: [
             {
-              id: 'm1', title: 'Week 1: Intro', description: 'Welcome to Cloud',
-              lessons: [{ id: 'l1', title: 'What is Cloud?', type: 'video', duration: '08:00', completed: false }]
-            }
+              id: 'm1', title: 'Week 1: Foundations', description: 'Cloud models and architecture basics',
+              lessons: [
+                { id: 'l1', title: 'What Is Cloud Computing?', type: 'video', duration: '10:00', completed: false },
+                { id: 'l2', title: 'IaaS vs PaaS vs SaaS', type: 'reading', duration: '14:00', completed: false },
+                { id: 'l3', title: 'Public, Private, and Hybrid Cloud', type: 'video', duration: '12:00', completed: false }
+              ]
+            },
+            {
+              id: 'm2', title: 'Week 2: Infrastructure', description: 'Compute, storage, and networking primitives',
+              lessons: [
+                { id: 'l4', title: 'Virtual Machines and Containers', type: 'video', duration: '18:00', completed: false },
+                { id: 'l5', title: 'Cloud Storage and Lifecycle Policies', type: 'reading', duration: '16:00', completed: false },
+                { id: 'l6', title: 'VPC Fundamentals', type: 'quiz', duration: '10:00', completed: false }
+              ]
+            },
+            {
+              id: 'm3', title: 'Week 3: Reliability', description: 'Observability, autoscaling, and service resilience',
+              lessons: [
+                { id: 'l7', title: 'Monitoring and Alerting', type: 'video', duration: '13:00', completed: false },
+                { id: 'l8', title: 'Autoscaling Strategies', type: 'reading', duration: '15:00', completed: false },
+                { id: 'l9', title: 'Cost Optimization Playbook', type: 'quiz', duration: '9:00', completed: false }
+              ]
+            },
           ],
           assignments: []
         },
@@ -347,9 +433,9 @@ export function CoursePage() {
         },
       };
 
-      const mockCourse = mockCourses[courseId]
-      if (mockCourse) {
-        setCourse(mockCourse)
+      const catalogCourse = catalogCourses[courseId]
+      if (catalogCourse) {
+        setCourse(catalogCourse)
       } else {
         setCourse(buildFallbackCourse(courseId, role))
       }
@@ -384,7 +470,7 @@ export function CoursePage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <CourseSidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         role={role}
       />
 
@@ -432,7 +518,6 @@ export function CoursePage() {
 
             {activeTab === 'assignments' && <AssignmentsView />}
             {activeTab === 'discussions' && <DiscussionsView />}
-            {activeTab === 'syllabus' && <SyllabusView syllabus={course.syllabus || []} />}
           </motion.div>
         </main>
       </div>

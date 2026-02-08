@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Paperclip, Mic, RefreshCcw, Sparkles, User, FileText, StopCircle, Volume2, Trash2, Loader2 } from 'lucide-react'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import ReactMarkdown from 'react-markdown'
+import apiClient from '../../../lib/axios-client'
 
 interface Message {
     id: string
@@ -40,8 +40,6 @@ export function CourseChatWidget({ courseTitle }: CourseChatWidgetProps) {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const audioChunksRef = useRef<Blob[]>([])
-
-    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -159,70 +157,21 @@ export function CourseChatWidget({ courseTitle }: CourseChatWidgetProps) {
         setIsLoading(true)
 
         try {
-            const genAI = new GoogleGenerativeAI(API_KEY)
-            // Use gemini-3-flash-preview as requested
-            const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
+            const attachmentNote = currentAttachment
+                ? `\n\nAttachment included: ${currentAttachment.name} (${currentAttachment.mimeType}).`
+                : ''
 
-            const chat = model.startChat({
-                history: messages
-                    .filter(m => m.id !== 'welcome')
-                    .map(m => ({
-                        role: m.role,
-                        parts: m.attachment ? [
-                            { text: m.text || (m.attachment.type === 'audio' ? 'Audio message sent.' : 'File sent.') },
-                            // Note: We can't easily resend history attachments in base64 without storing them all. 
-                            // Standard workaround for simple widgets: send text representation of history, 
-                            // only send actual base64 for the CURRENT turn. 
-                            // BUT Gemini API allows history with parts. 
-                            // For this simplified widget, we will only send the text description of past attachments 
-                            // to save bandwidth/complexity, but send the ACTUAL attachment for the new message.
-                        ] : [{ text: m.text }]
-                    })),
+            const response = await apiClient.post('/ai/tutor', {
+                courseId: courseTitle,
+                query: `${input || 'Analyze this and help me understand it clearly.'}${attachmentNote}`,
             })
 
-            const parts: any[] = []
-            if (input.trim()) parts.push({ text: input })
-            if (currentAttachment) {
-                parts.push({
-                    inlineData: {
-                        mimeType: currentAttachment.mimeType,
-                        data: currentAttachment.data
-                    }
-                })
-            }
-            if (parts.length === 0 && currentAttachment) {
-                // If only audio/file and no text, provide a default prompt
-                parts.push({ text: currentAttachment.type === 'audio' ? "Please transcribe and answer this audio message." : "Please analyze this file." })
-            }
-
-            // Improve prompt with context
-            const contextPrompt = `Context: The user is studying the course "${courseTitle}". Format answer with Markdown. If user sent audio/file, analyze it.`
-            // We append context to the beginning of the text part or as a separate part if possible. 
-            // Here, we just prepend to input text or add as text part.
-            // Simplified: We assume 'chat' session handles context if we seeded it, but we can't seed system instruction easily in this helper.
-            // We'll just send the prompt + parts.
-
-            // Actually, startChat history is strictly validated. 
-            // Let's just send the message parts directly.
-
-            // Hack: Prepend context to the text part if it exists, or create a text part
-            const finalParts = [
-                { text: `${contextPrompt} \n\n ${input}` },
-                ...(currentAttachment ? [{
-                    inlineData: {
-                        mimeType: currentAttachment.mimeType,
-                        data: currentAttachment.data
-                    }
-                }] : [])
-            ]
-
-            const result = await chat.sendMessage(finalParts)
-            const response = result.response.text()
+            const answer = response.data?.answer || "I'm having trouble generating a response right now."
 
             const botMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'model',
-                text: response,
+                text: answer,
                 timestamp: new Date()
             }
 

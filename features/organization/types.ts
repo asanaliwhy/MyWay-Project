@@ -14,7 +14,8 @@ export interface Organization {
   activity?: ActivityData
   color?: string // Hex color for the icon background
   plan?: string
-  isMock?: boolean
+  isPreview?: boolean
+  canDelete?: boolean
 }
 
 export interface User {

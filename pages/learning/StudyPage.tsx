@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     FileText,
@@ -16,11 +16,101 @@ import { OrgTopBar } from '../../features/organization/components/OrgTopBar'
 import { useAuth } from '../../features/auth/context/AuthContext'
 import { InstructorReviewPanel } from '../../features/ai-tutor/components/InstructorReviewPanel'
 import { StudentLearningPackPanel } from '../../features/ai-tutor/components/StudentLearningPackPanel'
+import { StudyPackGenerator } from '../../features/ai-tutor/components/StudyPackGenerator'
+import { useStudyPacks } from '../../features/ai-tutor/context/StudyPackContext'
+
+const prettifyLessonId = (materialId: string) =>
+    materialId
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, (m) => m.toUpperCase())
+
+const buildSeedStudyPack = (materialId: string) => {
+    const lowerId = materialId.toLowerCase()
+    const lessonTitle = prettifyLessonId(materialId)
+    const isCloud = lowerId.includes('cloud')
+    const fallbackVideoUrl = isCloud ? 'https://www.youtube.com/watch?v=mxT233EdY5c' : ''
+
+    const summary = isCloud
+        ? 'Cloud computing delivers on-demand infrastructure, platform, and software services over the internet. The lesson focuses on service models (IaaS, PaaS, SaaS), deployment patterns (public, private, hybrid), and why organizations adopt cloud for agility, scalability, and reliability.\n\nA strong cloud foundation requires understanding compute, storage, networking, IAM, and monitoring. Teams should design for high availability, least-privilege security, and cost governance to build resilient, efficient cloud systems.'
+        : 'This lesson introduces the core ideas and practical workflow for the topic. Focus on definitions, key components, and how they connect in real scenarios.\n\nAs you study, identify the main concepts, compare alternatives, and remember implementation trade-offs so you can apply the material confidently in assignments and projects.'
+
+    return {
+        source: 'seed',
+        id: `seed-${materialId}`,
+        materialId,
+        material: {
+            title: lessonTitle,
+            videoUrl: fallbackVideoUrl,
+            transcript: isCloud
+                ? 'Cloud computing provides scalable resources on demand. Service models include IaaS for infrastructure control, PaaS for managed development, and SaaS for ready-to-use applications.\n\nCore architecture topics include virtual machines, containers, object/block storage, and virtual networking. Reliability is achieved through multi-zone deployments, auto scaling, and observability.\n\nSecurity and governance remain central: IAM roles, encryption in transit/at rest, and cost controls such as budgets, quotas, and tagging policies.'
+                : 'This lesson covers foundational concepts, practical examples, and applied reasoning.\n\nRead the content carefully, then test your understanding with the quiz and flashcards.'
+        },
+        summary,
+        quizzes: [
+            {
+                id: `quiz-${materialId}`,
+                questions: isCloud
+                    ? [
+                        {
+                            id: `${materialId}-q1`,
+                            question: 'Which service model gives you the most control over operating systems and runtime setup?',
+                            options: ['SaaS', 'PaaS', 'IaaS', 'FaaS'],
+                            correctAnswer: 2,
+                            explanation: 'IaaS provides virtualized infrastructure and greater control over OS and middleware.'
+                        },
+                        {
+                            id: `${materialId}-q2`,
+                            question: 'What is the primary goal of auto scaling in cloud environments?',
+                            options: ['Increase manual operations', 'Match capacity to demand', 'Disable monitoring', 'Reduce availability'],
+                            correctAnswer: 1,
+                            explanation: 'Auto scaling adjusts compute capacity to workload demand for performance and cost efficiency.'
+                        },
+                        {
+                            id: `${materialId}-q3`,
+                            question: 'Which practice best supports cloud cost governance?',
+                            options: ['No tagging strategy', 'Use budgets and resource tagging', 'Disable billing alerts', 'Single-region hardcoding'],
+                            correctAnswer: 1,
+                            explanation: 'Budgets, alerts, and tagging are key controls for tracking and optimizing cloud spend.'
+                        }
+                    ]
+                    : [
+                        {
+                            id: `${materialId}-q1`,
+                            question: 'What should you focus on first in a new lesson?',
+                            options: ['Memorize random facts', 'Understand core concepts and terminology', 'Skip examples', 'Ignore definitions'],
+                            correctAnswer: 1,
+                            explanation: 'Foundational understanding helps you apply everything else correctly.'
+                        },
+                        {
+                            id: `${materialId}-q2`,
+                            question: 'Which approach improves retention most effectively?',
+                            options: ['Passive reading only', 'Practice with questions and recall', 'Avoid summaries', 'Study without structure'],
+                            correctAnswer: 1,
+                            explanation: 'Active recall and practice are reliable methods for long-term retention.'
+                        }
+                    ]
+            }
+        ],
+        flashcards: isCloud
+            ? [
+                { id: `${materialId}-f1`, front: 'IaaS', back: 'Infrastructure as a Service provides virtualized compute, storage, and networking resources with high control.' },
+                { id: `${materialId}-f2`, front: 'PaaS', back: 'Platform as a Service offers managed runtime and development tooling, reducing infrastructure overhead.' },
+                { id: `${materialId}-f3`, front: 'SaaS', back: 'Software as a Service delivers complete applications over the web with minimal setup for users.' },
+                { id: `${materialId}-f4`, front: 'High Availability', back: 'Designing systems to remain operational through redundancy, failover, and fault-tolerant architecture.' }
+            ]
+            : [
+                { id: `${materialId}-f1`, front: 'Core Concept', back: 'A foundational idea that explains how the lesson topic works.' },
+                { id: `${materialId}-f2`, front: 'Application', back: 'Using the concept in a practical scenario or problem-solving context.' }
+            ]
+    }
+}
 
 export function StudyPage() {
     const { materialId } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const { user } = useAuth()
+    const { materials, getStudyPackByMaterialId } = useStudyPacks()
 
     const isInstructor = user?.role === 'TEACHER' || user?.role === 'ORGANIZER'
 
@@ -28,6 +118,22 @@ export function StudyPage() {
     const [studyPack, setStudyPack] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    const returnTo = (() => {
+        const maybeState = location.state as { returnTo?: string } | null
+        return maybeState?.returnTo || null
+    })()
+
+    const goBackToSource = () => {
+        if (returnTo) {
+            navigate(returnTo)
+            return
+        }
+        navigate(-1)
+    }
+
+    const localMaterial = materialId ? materials.find((m) => m.id === materialId) : null
+    const localStudyPack = materialId ? getStudyPackByMaterialId(materialId) : null
 
     useEffect(() => {
         setActiveTab(isInstructor ? 'review' : 'summary')
@@ -41,158 +147,48 @@ export function StudyPage() {
                 return
             }
 
-            try {
-                // 1. Fetch backend study pack if exists
-                let packData = null;
-                try {
-                    const response = await apiClient.get(`/ai/studypack/${materialId}`)
-                    packData = response.data
-                } catch (e) {
-                    // Ignore, will use mock
-                }
-
-                // 2. Mock/Real Data Strategy
-                const videoUrl = 'https://www.youtube.com/watch?v=kqtD5dpn9C8'
-                let realTranscript = ''
-
-                try {
-                    // Call our new Go backend service
-                    const transcriptRes = await apiClient.post('/ai/transcript', {
-                        videoUrl: videoUrl
-                    })
-                    realTranscript = transcriptRes.data.transcript
-                } catch (err) {
-                    console.error("Failed to fetch real transcript:", err)
-                    // Fallback to static detailed transcript
-                    realTranscript = `0:00 - Introduction to Python
-Welcome to this comprehensive guide on Python programming. We'll start from the very basics and work our way up to more advanced concepts. Python is a versatile language used in web development, data science, AI, and automation.
-
-2:15 - Setting Up Your Environment
-First, you'll need to install Python. Go to python.org/downloads. We'll also be using VS Code as our code editor. Make sure to install the Python extension for VS Code to get intellisense and debugging features.
-
-8:45 - Your First Program
-Let's print "Hello World". In Python, it's just one line: print("Hello World"). Compare this to Java or C++ where you need a main function and class definition. Python handles the low-level details for you.
-
-15:30 - Variables and Data Types
-Python is dynamically typed. 
-x = 10 (Integer)
-price = 19.99 (Float)
-name = "MyWay" (String)
-is_published = True (Boolean)
-You can check the type of any variable using the type() function.
-
-22:10 - Type Conversion
-Sometimes you need to convert types. For example, input() always returns a string. To do math, you wrap it in int() or float(). 
-birth_year = input("Birth year: ")
-age = 2026 - int(birth_year)
-
-29:00 - Strings and Methods
-Strings are powerful in Python. You can use methods like .upper(), .lower(), .find(), and .replace(). 
-course = "Python for Beginners"
-print("Python" in course) # Returns True
-
-35:45 - Arithmetic Operations
-We have the standard +, -, *, /. 
-Division (/) returns a float. 
-Floor division (//) returns an integer. 
-Modulus (%) returns the remainder.
-Exponentiation (**) raises to a power.
-
-42:30 - If Statements
-Control flow lets us make decisions.
-if is_hot:
-    print("It's a hot day")
-elif is_cold:
-    print("It's a cold day")
-else:
-    print("It's a lovely day")
-Indentation is critical in Python!
-
-51:15 - Loops (While and For)
-To repeat code, use loops.
-i = 1
-while i <= 5:
-    print('*' * i)
-    i += 1
-
-For loops are great for iterating over lists:
-for item in ['Python', 'Java', 'Go']:
-    print(item)
-
-58:00 - Lists
-Lists are mutable sequences.
-names = ['John', 'Bob', 'Mosh']
-names[0] = 'Jon'
-names.append('Sarah')
-print(names[0:2]) # Slicing
-
-1:05:00 - Functions
-Functions break your code into reusable chunks.
-def greet_user(name):
-    print(f"Hi {name}!")
-
-Always define functions before calling them.
-
-1:12:00 - Return Values
-Functions can return data.
-def square(number):
-    return number * number
-
-1:15:00 - Conclusion
-We've covered the core building blocks of Python. Practice these concepts, and we'll see you in the next module where we build a real project.`
-                }
-
+            if (localMaterial && localStudyPack) {
                 setStudyPack({
-                    id: packData?.id || 'mock-pack',
+                    source: 'local',
+                    id: localStudyPack.id,
+                    materialId,
+                    material: {
+                        title: localMaterial.title,
+                        videoUrl: localMaterial.sourceUrl || '',
+                        transcript: localMaterial.content || '',
+                    },
+                    localStudyPack,
+                })
+                setLoading(false)
+                return
+            }
+
+            try {
+                const response = await apiClient.get(`/ai/studypack/${materialId}`)
+                const packData = response.data
+                setStudyPack({
+                    source: 'backend',
+                    id: packData?.id || `pack-${materialId}`,
                     materialId: materialId,
                     material: {
-                        title: 'Demo Lesson: Python Basics',
-                        videoUrl: videoUrl,
-                        transcript: realTranscript
+                        title: packData?.material?.title || 'Study Session',
+                        videoUrl: packData?.material?.videoUrl || '',
+                        transcript: packData?.material?.transcript || '',
                     },
-                    summary: packData?.summary || {
-                        content: {
-                            bullets: [
-                                'Python is a high-level, interpreted programming language.',
-                                'It emphasizes code readability with indentation.',
-                                'Variables do not need explicit declaration.'
-                            ],
-                            summary: 'This lesson covers the fundamental concepts of Python programming, starting with installation and setup. We explore how Python handles memory management automatically and why it is a popular choice for beginners and experts alike.'
-                        }
-                    },
-                    quizzes: packData?.quizzes || [{
-                        id: 'q1',
-                        questions: [
-                            {
-                                id: 'q1_1',
-                                prompt: 'What is the correct file extension for Python files?',
-                                options: ['.python', '.pl', '.py', '.p'],
-                                answer: '.py'
-                            },
-                            {
-                                id: 'q1_2',
-                                prompt: 'Which function is used to output text to the console?',
-                                options: ['echo()', 'console.log()', 'print()', 'printf()'],
-                                answer: 'print()'
-                            }
-                        ]
-                    }],
-                    flashcards: packData?.flashcards || [
-                        { front: 'print()', back: 'Outputs text to the console' },
-                        { front: 'def', back: 'Keyword to define a function' },
-                        { front: '#', back: 'Symbol used for single-line comments' }
-                    ]
+                    summary: packData?.summary,
+                    quizzes: packData?.quizzes || (packData?.quiz ? [packData.quiz] : []),
+                    flashcards: packData?.flashcards || [],
                 })
             } catch (err) {
                 console.error('Failed to prepare study pack:', err)
-                setError('Failed to load learning pack for this lecture.')
+                setStudyPack(buildSeedStudyPack(materialId))
             } finally {
                 setLoading(false)
             }
         }
 
         fetchStudyPack()
-    }, [materialId])
+    }, [materialId, localMaterial, localStudyPack])
 
     if (loading) {
         return (
@@ -215,7 +211,7 @@ We've covered the core building blocks of Python. Practice these concepts, and w
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Unable to open lecture</h2>
                             <p className="text-sm text-gray-600 dark:text-gray-300">{error}</p>
                             <button
-                                onClick={() => navigate(-1)}
+                                onClick={goBackToSource}
                                 className="mt-4 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold"
                             >
                                 Go Back
@@ -232,15 +228,21 @@ We've covered the core building blocks of Python. Practice these concepts, and w
         // ... empty state
     }
 
+    const isLocalGenerated = Boolean(studyPack?.source === 'local' && studyPack?.localStudyPack)
+
     const summaryContent = studyPack?.summary?.content || {}
-    const studentSummary = typeof summaryContent?.summary === 'string'
-        ? summaryContent.summary
+    const studentSummary = typeof studyPack?.summary === 'string'
+        ? studyPack.summary
+        : typeof summaryContent?.summary === 'string'
+            ? summaryContent.summary
         : 'Summary will be available after AI processing and instructor review.'
     const studentKeyPoints = Array.isArray(summaryContent?.bullets)
         ? summaryContent.bullets.filter((x: unknown) => typeof x === 'string')
         : []
 
-    const tabs = isInstructor
+    const tabs = isLocalGenerated
+        ? []
+        : isInstructor
         ? [{ id: 'review', label: 'Review & Publish', icon: Sparkles }]
         : [
             { id: 'summary', label: 'Summary', icon: FileText },
@@ -256,7 +258,7 @@ We've covered the core building blocks of Python. Practice these concepts, and w
                 {/* Breadcrumb & Title */}
                 <div className="flex items-center gap-4 mb-8">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={goBackToSource}
                         className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500"
                     >
                         <ChevronLeft size={20} />
@@ -311,68 +313,84 @@ We've covered the core building blocks of Python. Practice these concepts, and w
                     </div>
 
                     <div className="md:col-span-1">
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-                            {isInstructor ? 'AI Governance' : 'AI Study Helper'}
-                        </h3>
-                        {/* AI Tabs Vertical/Stacked */}
-                        <div className="flex flex-col gap-2">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${activeTab === tab.id
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                                        }`}
-                                >
-                                    <tab.icon size={18} />
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
+                        {isLocalGenerated ? (
+                            <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-900/20 p-4 text-sm text-indigo-800 dark:text-indigo-200">
+                                Generated study pack detected for this imported material. Use the interactive tabs below to open summary, quiz, and flashcards.
+                            </div>
+                        ) : (
+                            <>
+                                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                                    {isInstructor ? 'AI Governance' : 'AI Study Helper'}
+                                </h3>
+                                {/* AI Tabs Vertical/Stacked */}
+                                <div className="flex flex-col gap-2">
+                                    {tabs.map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id as any)}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${activeTab === tab.id
+                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
+                                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                                                }`}
+                                        >
+                                            <tab.icon size={18} />
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
                 {/* AI Content Area (moved below/alongside) */}
 
                 {/* content Area */}
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm min-h-[400px] overflow-hidden"
-                    >
-                        {isInstructor && activeTab === 'review' && materialId && (
-                            <div className="p-6">
-                                <InstructorReviewPanel
-                                    materialId={materialId}
-                                    fallbackVideoUrl={studyPack?.material?.videoUrl}
-                                />
-                            </div>
-                        )}
+                {isLocalGenerated ? (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm min-h-[400px] overflow-hidden">
+                        <div className="p-6">
+                            <StudyPackGenerator studyPack={studyPack.localStudyPack} />
+                        </div>
+                    </div>
+                ) : (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm min-h-[400px] overflow-hidden"
+                        >
+                            {isInstructor && activeTab === 'review' && materialId && (
+                                <div className="p-6">
+                                    <InstructorReviewPanel
+                                        materialId={materialId}
+                                        fallbackVideoUrl={studyPack?.material?.videoUrl}
+                                    />
+                                </div>
+                            )}
 
-                        {!isInstructor && activeTab === 'summary' && (
-                            <div className="p-6">
-                                <StudentLearningPackPanel
-                                    summary={studentSummary}
-                                    keyPoints={studentKeyPoints}
-                                    videoUrl={studyPack?.material?.videoUrl}
-                                />
-                            </div>
-                        )}
+                            {!isInstructor && activeTab === 'summary' && (
+                                <div className="p-6">
+                                    <StudentLearningPackPanel
+                                        summary={studentSummary}
+                                        keyPoints={studentKeyPoints}
+                                        videoUrl={studyPack?.material?.videoUrl}
+                                    />
+                                </div>
+                            )}
 
-                        {activeTab === 'quiz' && (
-                            <QuizInteraction quiz={studyPack?.quizzes?.[0]} />
-                        )}
+                            {activeTab === 'quiz' && (
+                                <QuizInteraction quiz={studyPack?.quizzes?.[0]} />
+                            )}
 
-                        {activeTab === 'flashcards' && (
-                            <FlashcardInteraction flashcards={studyPack?.flashcards || []} />
-                        )}
-                    </motion.div>
-                </AnimatePresence>
+                            {activeTab === 'flashcards' && (
+                                <FlashcardInteraction flashcards={studyPack?.flashcards || []} />
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                )}
             </main>
         </div>
     )
@@ -424,6 +442,7 @@ function QuizInteraction({ quiz }: { quiz: any }) {
     }
 
     const q = quiz.questions[currentIdx]
+    const questionText = q?.prompt || q?.question || 'Question'
 
     return (
         <div className="p-8">
@@ -434,7 +453,7 @@ function QuizInteraction({ quiz }: { quiz: any }) {
                 </div>
             </div>
 
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-10">{q.prompt}</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-10">{questionText}</h3>
 
             <div className="space-y-4">
                 {(q.options as string[]).map((option) => (
@@ -495,26 +514,28 @@ function FlashcardInteraction({ flashcards }: { flashcards: any[] }) {
             <div className="text-sm font-bold text-gray-400 mb-8 uppercase tracking-widest">Card {currentIdx + 1} of {flashcards.length}</div>
 
             <div
-                className="relative w-full max-w-xl h-80 perspective-1000 cursor-pointer"
+                className="relative w-full max-w-xl h-80 cursor-pointer"
                 onClick={() => setIsFlipped(!isFlipped)}
             >
-                <motion.div
-                    animate={{ rotateY: isFlipped ? 180 : 0 }}
-                    transition={{ duration: 0.6, type: 'spring', stiffness: 260, damping: 20 }}
-                    className="w-full h-full relative preserve-3d"
-                >
-                    {/* Front */}
-                    <div className="absolute inset-0 backface-hidden bg-white dark:bg-gray-800 border-2 border-indigo-100 dark:border-indigo-900 rounded-3xl p-12 flex items-center justify-center text-center shadow-sm">
-                        <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{card.front}</h4>
-                    </div>
-                    {/* Back */}
-                    <div
-                        className="absolute inset-0 backface-hidden bg-indigo-600 rounded-3xl p-12 flex items-center justify-center text-center text-white"
-                        style={{ transform: 'rotateY(180deg)' }}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={isFlipped ? `back-${card.id}` : `front-${card.id}`}
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
+                        className={`absolute inset-0 rounded-3xl p-12 flex items-center justify-center text-center ${isFlipped
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-white dark:bg-gray-800 border-2 border-indigo-100 dark:border-indigo-900 text-gray-900 dark:text-white shadow-sm'
+                            }`}
                     >
-                        <p className="text-xl leading-relaxed">{card.back}</p>
-                    </div>
-                </motion.div>
+                        {isFlipped ? (
+                            <p className="text-xl leading-relaxed">{card.back}</p>
+                        ) : (
+                            <h4 className="text-2xl font-bold">{card.front}</h4>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </div>
 
             <p className="mt-8 text-gray-400 text-sm">Click the card to flip</p>

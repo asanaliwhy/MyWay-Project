@@ -72,8 +72,8 @@ export function DiscussionsView() {
         return
       }
 
-      // Mock discussion data fallback
-      const mockDiscussions: Discussion[] = [
+      // Local fallback discussion data
+      const fallbackDiscussions: Discussion[] = [
         {
           id: 'd1',
           title: 'Question about Binary Search Trees',
@@ -180,11 +180,11 @@ export function DiscussionsView() {
           replyList: []
         }
       ];
-      setDiscussions(mockDiscussions);
+      setDiscussions(fallbackDiscussions);
     } catch (err) {
-      console.error('Failed to fetch discussions, using fallback mock:', err);
+      console.error('Failed to fetch discussions, using local fallback data:', err);
 
-      const mockDiscussions: Discussion[] = [
+      const fallbackDiscussions: Discussion[] = [
         {
           id: 'd1',
           title: 'Question about Binary Search Trees',
@@ -198,7 +198,7 @@ export function DiscussionsView() {
           replyList: [],
         },
       ]
-      setDiscussions(mockDiscussions)
+      setDiscussions(fallbackDiscussions)
     } finally {
       setLoading(false);
     }

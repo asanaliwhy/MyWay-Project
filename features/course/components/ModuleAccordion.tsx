@@ -22,10 +22,11 @@ interface ModuleAccordionProps {
 
 export function ModuleAccordion({ module, courseId, index, role, onRefresh }: ModuleAccordionProps) {
   const navigate = useNavigate()
-  const { getStudyPacksByModuleId } = useStudyPacks()
+  const { getMaterialsByModuleId, getStudyPacksByModuleId } = useStudyPacks()
   const [isOpen, setIsOpen] = useState(index === 0)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
+  const moduleMaterials = getMaterialsByModuleId(module.id)
   const studyPacks = getStudyPacksByModuleId(module.id)
 
   const completedLessons = module.lessons.filter((l) => l.completed).length
@@ -74,7 +75,7 @@ export function ModuleAccordion({ module, courseId, index, role, onRefresh }: Mo
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {(role === 'TEACHER' || role === 'ORGANIZER') && (
+                  {(role === 'TEACHER' || role === 'ORGANIZER' || role === 'STUDENT') && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -83,7 +84,7 @@ export function ModuleAccordion({ module, courseId, index, role, onRefresh }: Mo
                       className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
                     >
                       <Plus size={14} />
-                      Add Material
+                      Import Material
                     </button>
                   )}
 
@@ -136,10 +137,59 @@ export function ModuleAccordion({ module, courseId, index, role, onRefresh }: Mo
             <div className="p-6 space-y-6">
 
 
-              {/* Study Packs - REMOVED as per new architecture (moved to StudyPage) */}
+              {/* Study Packs moved to StudyPage */}
               {/* {studyPacks.length > 0 && ( ... )} */}
 
               {/* Lessons */}
+              {moduleMaterials.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                    Imported AI Materials
+                  </h4>
+                  {moduleMaterials.map((material) => {
+                    const hasPack = studyPacks.some((pack) => pack.materialId === material.id)
+
+                    return (
+                      <motion.button
+                        key={material.id}
+                        onClick={() => navigate(`/study/${material.id}`, {
+                          state: { returnTo: `/course/${courseId}?tab=modules` },
+                        })}
+                        className="w-full flex items-center gap-4 p-4 rounded-lg transition-all bg-white dark:bg-gray-800 border border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-300 dark:hover:border-indigo-700"
+                      >
+                        <div className="flex-shrink-0">
+                          {hasPack ? (
+                            <CheckCircle size={20} className="text-green-500" />
+                          ) : (
+                            <Circle size={20} className="text-amber-500" />
+                          )}
+                        </div>
+
+                        <div className="flex-1 text-left min-w-0">
+                          <h4 className="font-medium text-gray-900 dark:text-white truncate">{material.title}</h4>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase border bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700">
+                              {material.type}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${hasPack
+                              ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700'
+                              : 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700'
+                              }`}>
+                              {hasPack ? 'AI Pack Ready' : 'Processing'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="px-4 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors">
+                          Open Pack
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              )}
+
               {module.lessons.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -149,7 +199,9 @@ export function ModuleAccordion({ module, courseId, index, role, onRefresh }: Mo
                   {module.lessons.map((lesson) => (
                     <motion.button
                       key={lesson.id}
-                      onClick={() => navigate(`/study/${lesson.id}`)}
+                      onClick={() => navigate(`/study/${lesson.id}`, {
+                        state: { returnTo: `/course/${courseId}?tab=modules` },
+                      })}
                       className={`w-full flex items-center gap-4 p-4 rounded-lg transition-all ${lesson.completed ? 'bg-white dark:bg-gray-800 border border-green-100 dark:border-green-900/30' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-900/50'}`}
                     >
                       <div className="flex-shrink-0">
@@ -176,7 +228,7 @@ export function ModuleAccordion({ module, courseId, index, role, onRefresh }: Mo
               )}
 
               {/* Empty State */}
-              {module.lessons.length === 0 && studyPacks.length === 0 && (
+              {module.lessons.length === 0 && moduleMaterials.length === 0 && (
                 <div className="p-8 text-center">
                   <p className="text-gray-500 dark:text-gray-400 mb-4">No materials in this module yet.</p>
                   <button

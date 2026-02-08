@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Loader2, AlertCircle } from 'lucide-react'
+import { Plus, Loader2, AlertCircle, Trash2, CheckCircle2, X } from 'lucide-react'
 import { OrgSidebar } from '../features/organization/components/OrgSidebar'
 import { OrgTopBar } from '../features/organization/components/OrgTopBar'
 import { OrgCard } from '../features/organization/components/OrgCard'
 import { Organization } from '../features/organization/types'
 import apiClient from '../lib/axios-client'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../features/auth/context/AuthContext'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -25,14 +26,38 @@ const itemVariants = {
   },
 }
 
+type ToastState = {
+  title: string
+  message?: string
+  tone: 'success' | 'error'
+}
+
 export function OrgSelectorPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const accountRole = (user?.role || '').toUpperCase()
+  const canCreateOrganization = (user?.role || '').toUpperCase() === 'ORGANIZER'
+  const [deleteTarget, setDeleteTarget] = useState<Organization | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [toast, setToast] = useState<ToastState | null>(null)
 
-  const buildRoleMockOrganizations = (): Organization[] => {
-    const role = (localStorage.getItem('mock_role') || 'STUDENT').toUpperCase()
+  const normalizeOrganizationName = (rawName: string) => {
+    const name = (rawName || '').trim()
+    const key = name.toLowerCase()
+
+    if (accountRole === 'STUDENT' || accountRole === 'TEACHER') {
+      if (key === 'sads' || key === 'myqway') return 'Google Learning'
+      if (key === 'nb' || key === 'drhf') return 'Stanford University'
+    }
+
+    return name
+  }
+
+  const buildRolePreviewOrganizations = (): Organization[] => {
+    const role = (localStorage.getItem('preview_role') || 'STUDENT').toUpperCase()
 
     const base: Organization[] = [
       {
@@ -42,7 +67,7 @@ export function OrgSelectorPage() {
         memberCount: 15420,
         activity: { points: [20, 45, 60, 55, 80, 75, 90], trend: 'up', label: 'Growing' },
         color: '#8C1515',
-        isMock: true,
+        isPreview: true,
       },
       {
         id: 'e155d5d3-75f5-43a7-e532-40691988200d',
@@ -51,7 +76,7 @@ export function OrgSelectorPage() {
         memberCount: 8500,
         activity: { points: [25, 40, 55, 60, 75, 80, 92], trend: 'up', label: 'Trending' },
         color: '#4285F4',
-        isMock: true,
+        isPreview: true,
       },
     ]
 
@@ -63,7 +88,7 @@ export function OrgSelectorPage() {
         memberCount: 2200,
         activity: { points: [40, 55, 50, 75, 70, 82, 85], trend: 'neutral', label: 'Stable' },
         color: '#A41034',
-        isMock: true,
+        isPreview: true,
       })
     }
 
@@ -80,8 +105,9 @@ export function OrgSelectorPage() {
         const res = await apiClient.get('/organizations')
         const realOrgs = (res.data || []).map((org: any) => ({
           id: String(org.id),
-          name: String(org.name),
+          name: normalizeOrganizationName(String(org.name)),
           role: (org.role || 'STUDENT') as Organization['role'],
+          canDelete: canCreateOrganization && ((org.role || '').toUpperCase() === 'ORGANIZER'),
           plan: org.plan,
           memberCount: 0,
           color: '#4F46E5',
@@ -92,50 +118,67 @@ export function OrgSelectorPage() {
           },
         }))
 
-        // If no real organizations, provide role-based mock orgs so student/teacher can still enter catalogs.
+        // If no real organizations, provide role-based preview orgs so student/teacher can still enter catalogs.
         if (realOrgs.length === 0) {
-          setOrganizations(buildRoleMockOrganizations())
+          setOrganizations(buildRolePreviewOrganizations())
           return
         }
 
         setOrganizations(realOrgs)
         return
       } catch (backendErr) {
-        console.warn('Backend organizations fetch failed, falling back to mock data', backendErr)
+        console.warn('Backend organizations fetch failed, falling back to preview data', backendErr)
       }
 
-      // 2) Fallback mock organizations
-      setOrganizations(buildRoleMockOrganizations())
+      // 2) Fallback preview organizations
+      setOrganizations(buildRolePreviewOrganizations())
 
       // In a real scenario with mixed mode, we might want to also fetch real ones 
-      // and append them, but for now we stick to the requested mocks.
+      // and append them, but for now we keep the requested preview set.
     } catch (err) {
       console.error('Failed to fetch orgs:', err);
       setError('Could not load organizations.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [accountRole, canCreateOrganization]);
 
   useEffect(() => {
     fetchOrgs()
   }, [fetchOrgs])
 
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(null), 3200)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+
+  const pushToast = (next: ToastState) => setToast(next)
+
   const handleCreateOrg = async () => {
+    if (!canCreateOrganization) {
+      pushToast({
+        tone: 'error',
+        title: 'Access denied',
+        message: 'Only organizer role can create organizations.',
+      })
+      return
+    }
+
     const name = prompt('Enter Organization Name:')
     if (!name) return
     try {
       await apiClient.post('/organizations', { name })
       fetchOrgs()
     } catch (err) {
-      alert('Failed to create organization')
+      pushToast({ tone: 'error', title: 'Create failed', message: 'Failed to create organization.' })
     }
   }
 
   const handleSelectOrganization = async (org: Organization) => {
-    if (org.isMock) {
+    if (org.isPreview) {
       localStorage.setItem('active_org_id', org.id)
-      localStorage.setItem('mock_role', org.role)
+      localStorage.setItem('preview_role', org.role)
       navigate(`/organizations/${org.id}`)
       return
     }
@@ -158,7 +201,57 @@ export function OrgSelectorPage() {
         }
       }
 
-      alert('Failed to switch organization')
+      pushToast({ tone: 'error', title: 'Switch failed', message: 'Failed to switch organization.' })
+    }
+  }
+
+  const handleDeleteOrganization = (org: Organization) => {
+    if (!canCreateOrganization) {
+      pushToast({
+        tone: 'error',
+        title: 'Access denied',
+        message: 'Only organizer role can delete organizations.',
+      })
+      return
+    }
+
+    setDeleteTarget(org)
+  }
+
+  const confirmDeleteOrganization = async () => {
+    if (!deleteTarget) return
+
+    setDeleteBusy(true)
+
+    try {
+      try {
+        await apiClient.delete(`/organizations/${deleteTarget.id}`)
+      } catch (err: any) {
+        // Fallback for environments where DELETE route is not exposed yet.
+        if (err?.response?.status === 404) {
+          await apiClient.post(`/organizations/${deleteTarget.id}/delete`)
+        } else {
+          throw err
+        }
+      }
+
+      const activeOrgId = localStorage.getItem('active_org_id')
+      if (activeOrgId === deleteTarget.id) {
+        localStorage.removeItem('active_org_id')
+      }
+      fetchOrgs()
+      pushToast({
+        tone: 'success',
+        title: 'Organization deleted',
+        message: `"${deleteTarget.name}" was removed successfully.`,
+      })
+    } catch (err: any) {
+      console.error('Delete organization failed:', err)
+      const message = err?.response?.data?.error || 'Failed to delete organization.'
+      pushToast({ tone: 'error', title: 'Delete failed', message })
+    } finally {
+      setDeleteBusy(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -206,27 +299,118 @@ export function OrgSelectorPage() {
               <>
                 {organizations.map((org) => (
                   <motion.div key={org.id} variants={itemVariants}>
-                    <OrgCard org={org} onSelect={handleSelectOrganization} />
+                    <OrgCard
+                      org={org}
+                      onSelect={handleSelectOrganization}
+                      onDelete={canCreateOrganization ? handleDeleteOrganization : undefined}
+                    />
                   </motion.div>
                 ))}
 
-                <motion.button
-                  onClick={handleCreateOrg}
-                  variants={itemVariants}
-                  className="group flex flex-col items-center justify-center h-full min-h-[180px] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/20 transition-all"
-                >
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 flex items-center justify-center text-gray-400 dark:text-gray-600 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-3">
-                    <Plus size={24} />
-                  </div>
-                  <span className="font-medium text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-                    Create another organization
-                  </span>
-                </motion.button>
+                {canCreateOrganization && (
+                  <motion.button
+                    onClick={handleCreateOrg}
+                    variants={itemVariants}
+                    className="group flex flex-col items-center justify-center h-full min-h-[180px] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/20 transition-all"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 flex items-center justify-center text-gray-400 dark:text-gray-600 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-3">
+                      <Plus size={24} />
+                    </div>
+                    <span className="font-medium text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
+                      Create another organization
+                    </span>
+                  </motion.button>
+                )}
               </>
             )}
           </motion.div>
         </main>
       </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            className="w-full max-w-md rounded-2xl border border-red-200/60 dark:border-red-900/40 bg-white dark:bg-gray-900 shadow-2xl"
+          >
+            <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 flex items-center justify-center">
+                  <Trash2 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Delete organization?</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">This action removes courses, members, and related data.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                disabled={deleteBusy}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="p-5">
+              <div className="rounded-xl bg-gray-50 dark:bg-gray-800/70 border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 mb-5">
+                {deleteTarget.name}
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleteBusy}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteOrganization}
+                  disabled={deleteBusy}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  {deleteBusy ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-5 right-5 z-[80] w-[min(92vw,360px)]"
+        >
+          <div className={`rounded-xl border shadow-lg px-4 py-3 ${toast.tone === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            }`}>
+            <div className="flex items-start gap-3">
+              <div className={toast.tone === 'success' ? 'text-emerald-600 dark:text-emerald-300 mt-0.5' : 'text-red-600 dark:text-red-300 mt-0.5'}>
+                {toast.tone === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+              </div>
+              <div className="min-w-0">
+                <p className={toast.tone === 'success' ? 'text-emerald-900 dark:text-emerald-100 font-semibold' : 'text-red-900 dark:text-red-100 font-semibold'}>{toast.title}</p>
+                {toast.message && (
+                  <p className={toast.tone === 'success' ? 'text-emerald-800/90 dark:text-emerald-200/90 text-sm mt-0.5' : 'text-red-800/90 dark:text-red-200/90 text-sm mt-0.5'}>{toast.message}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setToast(null)}
+                className="ml-auto p-1 rounded text-gray-500 hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div >
   )
 }

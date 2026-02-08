@@ -1,17 +1,12 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   BookOpen,
   MessageSquare,
   FileText,
-  Users,
-  Settings,
   Shield,
   ChevronLeft,
-  ChevronDown,
-  GraduationCap,
 } from 'lucide-react'
 
 interface CourseSidebarProps {
@@ -22,14 +17,12 @@ interface CourseSidebarProps {
 
 export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarProps) {
   const navigate = useNavigate()
-  const [isCoursesOpen, setIsCoursesOpen] = useState(false)
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'modules', label: 'Modules', icon: BookOpen },
     { id: 'assignments', label: 'Assignments', icon: FileText },
     { id: 'discussions', label: 'Discussions', icon: MessageSquare },
-    { id: 'syllabus', label: 'Syllabus', icon: FileText },
   ]
 
   return (
@@ -63,42 +56,6 @@ export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarPro
           </button>
         ))}
 
-        {/* Other Courses Dropdown */}
-        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => setIsCoursesOpen(!isCoursesOpen)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <EducationIcon className="text-gray-400 dark:text-gray-500" />
-              <span>Other Courses</span>
-            </div>
-            <motion.div
-              animate={{ rotate: isCoursesOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDown size={16} />
-            </motion.div>
-          </button>
-
-          <AnimatePresence>
-            {isCoursesOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden bg-gray-100/50 dark:bg-gray-900/50 rounded-lg mt-1 mx-2"
-              >
-                <button className="w-full text-left px-8 py-2 text-xs text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  AI Algorithms
-                </button>
-                <button className="w-full text-left px-8 py-2 text-xs text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                  Quantum Computing
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
       </nav>
 
       {/* Role Footer */}
@@ -118,7 +75,3 @@ export function CourseSidebar({ activeTab, onTabChange, role }: CourseSidebarPro
     </aside>
   )
 }
-
-const EducationIcon = ({ className }: { className?: string }) => (
-  <GraduationCap size={20} className={className} />
-)

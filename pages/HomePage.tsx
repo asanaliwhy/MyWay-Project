@@ -138,12 +138,12 @@ export function HomePage() {
                             </div>
                         </div>
 
-                        {/* Dashboard Mockup */}
+                        {/* Dashboard Preview */}
                         <div className="relative">
                             <div className="absolute inset-0 bg-blue-100 rounded-3xl transform rotate-3 scale-95 opacity-50 blur-3xl"></div>
                             <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-2 relative overflow-hidden">
                                 <div className="bg-gray-50 rounded-xl border border-gray-200 aspect-[4/3] relative flex flex-col">
-                                    {/* Mock Header */}
+                                    {/* Preview Header */}
                                     <div className="h-12 border-b border-gray-200 bg-white flex items-center px-4 gap-2">
                                         <div className="flex gap-1.5">
                                             <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -154,7 +154,7 @@ export function HomePage() {
                                             portal.edu-tech.com/dashboard
                                         </div>
                                     </div>
-                                    {/* Mock Content */}
+                                    {/* Preview Content */}
                                     <div className="flex-1 p-6 flex gap-6">
                                         <div className="w-1/4 space-y-3">
                                             <div className="h-2 bg-gray-200 rounded w-3/4"></div>
@@ -305,40 +305,40 @@ export function HomePage() {
                     <div className="grid md:grid-cols-3 gap-8">
                         {/* Plan 1 */}
                         <div className="p-8 border border-gray-200 rounded-2xl hover:border-blue-600 transition-colors bg-white">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Starter</h3>
-                            <p className="text-gray-500 mb-6">Perfect for small teams</p>
-                            <div className="text-4xl font-bold text-gray-900 mb-6">$0<span className="text-lg text-gray-500 font-normal">/mo</span></div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Basic Plan</h3>
+                            <p className="text-gray-500 mb-6">Core analytics & dashboards</p>
+                            <div className="text-4xl font-bold text-gray-900 mb-6">599 990 KZT<span className="text-lg text-gray-500 font-normal">/year</span></div>
                             <ul className="space-y-4 mb-8">
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Up to 50 students</li>
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Basic Analytics</li>
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Community Support</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Core Analytics Dashboards</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Course Progress Insights</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Standard Email Support</li>
                             </ul>
-                            <button onClick={() => navigate('/signin')} className="w-full py-3 bg-gray-50 text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">Start for Free</button>
+                            <button onClick={() => navigate('/signin')} className="w-full py-3 bg-gray-50 text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">Choose Basic</button>
                         </div>
                         {/* Plan 2 */}
                         <div className="p-8 border-2 border-blue-600 rounded-2xl bg-blue-50/50 relative">
                             <div className="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">Popular</div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Growth</h3>
-                            <p className="text-gray-500 mb-6">For growing institutions</p>
-                            <div className="text-4xl font-bold text-gray-900 mb-6">$49<span className="text-lg text-gray-500 font-normal">/mo</span></div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Standard Plan</h3>
+                            <p className="text-gray-500 mb-6">AI guidance + personalization</p>
+                            <div className="text-4xl font-bold text-gray-900 mb-6">1 239 990 KZT<span className="text-lg text-gray-500 font-normal">/year</span></div>
                             <ul className="space-y-4 mb-8">
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Up to 500 students</li>
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Advanced Analytics</li>
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Email Support</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> AI Guidance Assistant</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Personalized Learning Paths</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Enhanced Analytics</li>
                             </ul>
-                            <button onClick={() => navigate('/signin')} className="w-full py-3 bg-[#1e3a8a] text-white font-bold rounded-lg hover:bg-[#172554] transition-colors">Get Started</button>
+                            <button onClick={() => navigate('/signin')} className="w-full py-3 bg-[#1e3a8a] text-white font-bold rounded-lg hover:bg-[#172554] transition-colors">Choose Standard</button>
                         </div>
                         {/* Plan 3 */}
                         <div className="p-8 border border-gray-200 rounded-2xl hover:border-blue-600 transition-colors bg-white">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
-                            <p className="text-gray-500 mb-6">For large universities</p>
-                            <div className="text-4xl font-bold text-gray-900 mb-6">Custom</div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Pro Plan</h3>
+                            <p className="text-gray-500 mb-6">Advanced analytics & multi-organization support</p>
+                            <div className="text-4xl font-bold text-gray-900 mb-6">2 399 990 KZT<span className="text-lg text-gray-500 font-normal">/year</span></div>
                             <ul className="space-y-4 mb-8">
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Unlimited students</li>
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Custom Integrations</li>
-                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> 24/7 Priority Support</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Advanced Analytics Suite</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Multi-Organization Workspace</li>
+                                <li className="flex items-center gap-3 text-gray-600"><CheckCircle size={18} className="text-green-500" /> Priority Success Support</li>
                             </ul>
-                            <button onClick={() => navigate('/signin')} className="w-full py-3 bg-gray-50 text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">Contact Sales</button>
+                            <button onClick={() => navigate('/signin')} className="w-full py-3 bg-gray-50 text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-colors">Choose Pro</button>
                         </div>
                     </div>
                 </div>

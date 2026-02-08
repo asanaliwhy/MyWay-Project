@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"myway-backend/internal/database"
 	"myway-backend/internal/models"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -395,10 +398,159 @@ func (h *AIHandler) TutorChat(c *gin.Context) {
 		return
 	}
 
-	// Mock response for MVP (Gemini integration would go here)
+	query := strings.TrimSpace(req.Query)
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "query is required"})
+		return
+	}
+
+	if strings.TrimSpace(h.GeminiAPIKey) == "" {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Gemini API key is not configured"})
+		return
+	}
+
+	answer, err := h.generateTutorAnswerWithGemini(req.CourseID, query)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Gemini request failed"})
+		return
+	}
+	answer = sanitizeTutorAnswer(answer)
+
 	c.JSON(http.StatusOK, gin.H{
-		"answer":                 "I am a mock AI tutor. Real Gemini integration would provide intelligent responses based on your course materials.",
-		"sourceReferences":       []string{"Mock Source 1", "Mock Source 2"},
-		"analyzedMaterialsCount": 2,
+		"answer":                 answer,
+		"sourceReferences":       []string{},
+		"analyzedMaterialsCount": 1,
+		"provider":               "gemini",
+		"model":                  "gemini-3-flash-preview",
 	})
+}
+
+func (h *AIHandler) generateTutorAnswerWithGemini(courseID, query string) (string, error) {
+	modelName := "gemini-3-flash-preview"
+
+	prompt := strings.TrimSpace(`You are MyWay AI Tutor.
+
+Rules:
+- Explain clearly and practically.
+- Use short paragraphs and bullet points when useful.
+- If user asks for differences/comparisons, provide a side-by-side style explanation.
+- If user asks for steps, give numbered steps.
+- Do NOT start responses with greetings (no "Hi", "Hello", "Hey", "Great question", or similar openers).
+- Start directly with the answer.
+- Keep tone professional, concise, and natural.
+- End with one concise check-for-understanding question.
+
+Course context: ` + courseID + `
+User question: ` + query)
+
+	type geminiPart struct {
+		Text string `json:"text"`
+	}
+	type geminiContent struct {
+		Role  string       `json:"role,omitempty"`
+		Parts []geminiPart `json:"parts"`
+	}
+	type geminiGenerationConfig struct {
+		Temperature     float64 `json:"temperature,omitempty"`
+		MaxOutputTokens int     `json:"maxOutputTokens,omitempty"`
+	}
+	type geminiRequest struct {
+		Contents         []geminiContent         `json:"contents"`
+		GenerationConfig geminiGenerationConfig `json:"generationConfig,omitempty"`
+	}
+
+	requestBody := geminiRequest{
+		Contents: []geminiContent{
+			{
+				Role:  "user",
+				Parts: []geminiPart{{Text: prompt}},
+			},
+		},
+		GenerationConfig: geminiGenerationConfig{
+			Temperature:     0.4,
+			MaxOutputTokens: 900,
+		},
+	}
+
+	payload, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", err
+	}
+
+	url := "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + h.GeminiAPIKey
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payload))
+	if err != nil {
+		return "", err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 400 {
+		return "", errors.New("gemini returned non-2xx response")
+	}
+
+	type geminiResponse struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
+	}
+
+	var parsed geminiResponse
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return "", err
+	}
+
+	for _, candidate := range parsed.Candidates {
+		for _, part := range candidate.Content.Parts {
+			text := strings.TrimSpace(part.Text)
+			if text != "" {
+				return text, nil
+			}
+		}
+	}
+
+	return "", errors.New("empty response from gemini")
+}
+
+func sanitizeTutorAnswer(input string) string {
+	text := strings.TrimSpace(input)
+	if text == "" {
+		return text
+	}
+
+	// Remove repetitive greeting-style lead-ins from model responses.
+	patterns := []*regexp.Regexp{
+		regexp.MustCompile(`(?is)^\s*(hello|hi|hey|greetings)[^\n]{0,140}ai\s*tutor[^\n.!?]*[.!?]\s*`),
+		regexp.MustCompile(`(?is)^\s*(hello|hi|hey|greetings)[^\n.!?]*[.!?]\s*`),
+		regexp.MustCompile(`(?is)^\s*(let'?s|lets)\s+(dive\s+in|dive\s+into|get\s+started|jump\s+in)[^\n.!?]*[.!?]\s*`),
+	}
+
+	cleaned := text
+	for i := 0; i < 4; i++ {
+		before := cleaned
+		for _, p := range patterns {
+			cleaned = p.ReplaceAllString(cleaned, "")
+			cleaned = strings.TrimSpace(cleaned)
+		}
+		if cleaned == before {
+			break
+		}
+	}
+
+	if cleaned == "" {
+		return text
+	}
+
+	return cleaned
 }

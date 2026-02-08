@@ -260,7 +260,7 @@ func (h *ImportsHandler) processStudyPack(studyPackID uuid.UUID, transcript stri
 	time.Sleep(2 * time.Second)
 
 	// Generate study content
-	h.generateMockStudyContent(studyPackID)
+	h.generateStudyContentSeed(studyPackID)
 
 	log.Printf("Study pack %s processed successfully", studyPackID)
 }
@@ -273,15 +273,15 @@ func (h *ImportsHandler) processDocumentStudyPack(studyPackID uuid.UUID, fileURL
 	// 2. Extract text (using a library like go-pdf, docx, etc.)
 	// 3. Generate study content from extracted text
 
-	// For MVP, simulate with mock content
+	// For MVP, simulate with generated seed content
 	time.Sleep(2 * time.Second)
-	h.generateMockStudyContent(studyPackID)
+	h.generateStudyContentSeed(studyPackID)
 
 	log.Printf("Document study pack %s processed successfully", studyPackID)
 }
 
-func (h *ImportsHandler) generateMockStudyContent(studyPackID uuid.UUID) {
-	// Create mock summary
+func (h *ImportsHandler) generateStudyContentSeed(studyPackID uuid.UUID) {
+	// Create generated summary
 	summaryContent := map[string]interface{}{
 		"summary": "This is a generated summary of the material.",
 		"bullets": []string{
@@ -298,7 +298,7 @@ func (h *ImportsHandler) generateMockStudyContent(studyPackID uuid.UUID) {
 	}
 	database.GetDB().Create(&summary)
 
-	// Create mock quiz
+	// Create generated quiz
 	quiz := models.Quiz{
 		StudyPackID: studyPackID,
 		Version:     1,

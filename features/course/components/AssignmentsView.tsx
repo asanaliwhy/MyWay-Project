@@ -57,7 +57,7 @@ interface InfoModalState {
 const isUuid = (value?: string) =>
   !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 
-const mockAssignmentsStorageKey = (courseId?: string) => `myway_mock_assignments_${courseId || 'unknown'}`
+const localAssignmentsStorageKey = (courseId?: string) => `myway_local_assignments_${courseId || 'unknown'}`
 
 const fileNameFromUrl = (fileUrl?: string) => {
   if (!fileUrl) return undefined
@@ -81,7 +81,7 @@ const mapAssignmentStatus = (value?: string): AssignmentStatus => {
   return 'Not Started'
 }
 
-const buildDefaultMockAssignments = (role: UserRole, userName: string): Assignment[] => {
+const buildDefaultAssignments = (role: UserRole, userName: string): Assignment[] => {
   const teacherSubmissions: SubmissionItem[] = [
     {
       id: 'sub-m1',
@@ -151,9 +151,9 @@ const buildDefaultMockAssignments = (role: UserRole, userName: string): Assignme
   ]
 }
 
-const loadMockAssignments = (courseId: string | undefined, role: UserRole, userName: string): Assignment[] => {
+const loadLocalAssignments = (courseId: string | undefined, role: UserRole, userName: string): Assignment[] => {
   try {
-    const raw = localStorage.getItem(mockAssignmentsStorageKey(courseId))
+    const raw = localStorage.getItem(localAssignmentsStorageKey(courseId))
     if (raw) {
       const parsed = JSON.parse(raw) as Assignment[]
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
@@ -161,14 +161,14 @@ const loadMockAssignments = (courseId: string | undefined, role: UserRole, userN
   } catch {
     // ignore parsing issues
   }
-  const defaults = buildDefaultMockAssignments(role, userName)
-  localStorage.setItem(mockAssignmentsStorageKey(courseId), JSON.stringify(defaults))
+  const defaults = buildDefaultAssignments(role, userName)
+  localStorage.setItem(localAssignmentsStorageKey(courseId), JSON.stringify(defaults))
   return defaults
 }
 
-const saveMockAssignments = (courseId: string | undefined, assignments: Assignment[]) => {
+const saveLocalAssignments = (courseId: string | undefined, assignments: Assignment[]) => {
   try {
-    localStorage.setItem(mockAssignmentsStorageKey(courseId), JSON.stringify(assignments))
+    localStorage.setItem(localAssignmentsStorageKey(courseId), JSON.stringify(assignments))
   } catch {
     // ignore storage failures
   }
@@ -186,7 +186,7 @@ export function AssignmentsView() {
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>('all')
-  const [isMockMode, setIsMockMode] = useState(false)
+  const [isLocalMode, setIsLocalMode] = useState(false)
 
   const [submitDialogAssignmentId, setSubmitDialogAssignmentId] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -219,8 +219,8 @@ export function AssignmentsView() {
     setLoading(true)
 
     if (!courseId || !isUuid(courseId)) {
-      setIsMockMode(true)
-      setAssignments(loadMockAssignments(courseId, role, userName))
+      setIsLocalMode(true)
+      setAssignments(loadLocalAssignments(courseId, role, userName))
       setLoading(false)
       return
     }
@@ -275,15 +275,15 @@ export function AssignmentsView() {
       }
 
       if (mergedAssignments.length > 0) {
-        setIsMockMode(false)
+        setIsLocalMode(false)
         setAssignments(mergedAssignments)
       } else {
-        setIsMockMode(true)
-        setAssignments(loadMockAssignments(courseId, role, userName))
+        setIsLocalMode(true)
+        setAssignments(loadLocalAssignments(courseId, role, userName))
       }
     } catch {
-      setIsMockMode(true)
-      setAssignments(loadMockAssignments(courseId, role, userName))
+      setIsLocalMode(true)
+      setAssignments(loadLocalAssignments(courseId, role, userName))
     } finally {
       setLoading(false)
     }
@@ -337,7 +337,7 @@ export function AssignmentsView() {
     const generatedFileUrl = submissionLink.trim() || `attached://${encodeURIComponent(selectedFile?.name || 'submission-file')}`
     const attachmentName = selectedFile?.name || fileNameFromUrl(generatedFileUrl)
 
-    if (isMockMode) {
+    if (isLocalMode) {
       const next: Assignment[] = assignments.map((assignment): Assignment => {
         if (assignment.id !== submitDialogAssignmentId) return assignment
 
@@ -361,9 +361,9 @@ export function AssignmentsView() {
       })
 
       setAssignments(next)
-      saveMockAssignments(courseId, next)
+      saveLocalAssignments(courseId, next)
       closeSubmitDialog()
-      openInfoModal('Submission Saved', 'Your submission was saved in mock mode.', 'success')
+      openInfoModal('Submission Saved', 'Your submission was saved in local mode.', 'success')
       setIsSubmitting(false)
       return
     }
@@ -413,7 +413,7 @@ export function AssignmentsView() {
     setIsCreating(true)
     setCreateError(null)
 
-    if (isMockMode || !courseId || !isUuid(courseId)) {
+    if (isLocalMode || !courseId || !isUuid(courseId)) {
       const newAssignment: Assignment = {
         id: `a-${Date.now()}`,
         title: createTitle.trim(),
@@ -425,9 +425,9 @@ export function AssignmentsView() {
       }
       const next = [newAssignment, ...assignments]
       setAssignments(next)
-      saveMockAssignments(courseId, next)
+      saveLocalAssignments(courseId, next)
       closeCreateModal()
-      openInfoModal('Assignment Created', 'Mock assignment has been created.', 'success')
+      openInfoModal('Assignment Created', 'Assignment has been created in local mode.', 'success')
       setIsCreating(false)
       return
     }
@@ -476,7 +476,7 @@ export function AssignmentsView() {
     setIsGrading(true)
     setGradeError(null)
 
-    if (isMockMode) {
+    if (isLocalMode) {
       const next: Assignment[] = assignments.map((assignment): Assignment => {
         if (assignment.id !== manageAssignment.id) return assignment
 
@@ -493,13 +493,13 @@ export function AssignmentsView() {
       })
 
       setAssignments(next)
-      saveMockAssignments(courseId, next)
+      saveLocalAssignments(courseId, next)
       const updated = next.find((a) => a.id === manageAssignment.id) || null
       setManageAssignment(updated)
       setGradingSubmissionId(null)
       setGradeScore('')
       setGradeFeedback('')
-      openInfoModal('Submission Graded', 'Mock submission has been graded.', 'success')
+      openInfoModal('Submission Graded', 'Submission has been graded in local mode.', 'success')
       setIsGrading(false)
       return
     }
@@ -531,7 +531,10 @@ export function AssignmentsView() {
 
     if (assignment.status === 'Submitted') {
       navigate(`/course/${courseId || 'unknown'}/assignments/${assignment.id}/submission`, {
-        state: { assignment },
+        state: {
+          assignment,
+          returnTo: `/course/${courseId || 'unknown'}?tab=assignments`,
+        },
       })
       return
     }
@@ -555,9 +558,9 @@ export function AssignmentsView() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Assignments</h2>
           <p className="text-gray-600 dark:text-gray-400">Track submissions, create tasks, and manage grading</p>
-          {isMockMode && (
+          {isLocalMode && (
             <div className="mt-3 inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold px-3 py-1">
-              Mock Mode: local data storage is active
+              Local Mode: local data storage is active
             </div>
           )}
         </div>

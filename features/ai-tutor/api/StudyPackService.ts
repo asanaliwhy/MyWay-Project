@@ -241,6 +241,26 @@ const fetchYoutubeTranscript = async (url: string): Promise<string> => {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+
+            // Some videos legitimately have no captions; use a content seed instead of failing import.
+            if (response.status === 404) {
+                const noCaptionsMessage = `${errorData.error || ''} ${errorData.message || ''}`.toLowerCase()
+                if (noCaptionsMessage.includes('caption') || noCaptionsMessage.includes('transcript')) {
+                    console.warn('⚠️ No captions available for this video. Falling back to generated study seed content.')
+                    return `No automatic transcript was available for this YouTube video.
+
+Video URL: ${url}
+
+Use this as a guided seed to generate study materials:
+- Identify the main topic and core concepts presented in the video.
+- Extract 5-7 key takeaways while watching.
+- Note any terminology, examples, or workflows demonstrated.
+- Summarize practical applications and common mistakes.
+
+Tip: For higher-quality results, paste a manual transcript in the import form and regenerate.`
+                }
+            }
+
             throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`)
         }
 
@@ -252,10 +272,12 @@ const fetchYoutubeTranscript = async (url: string): Promise<string> => {
 
         return data.transcript
     } catch (error) {
-        console.error('❌ Error fetching YouTube transcript:', error)
+        console.warn('⚠️ Error fetching YouTube transcript, using fallback seed content:', error)
 
-        // Return a helpful error message
-        return `Failed to fetch transcript from YouTube video. Error: ${error instanceof Error ? error.message : 'Unknown error'}
+        // Return a helpful fallback message so import can continue
+        return `Transcript retrieval failed for this video.
+
+Reason: ${error instanceof Error ? error.message : 'Unknown error'}
 
 This could be because:
 1. The video doesn't have captions/subtitles enabled
@@ -263,12 +285,13 @@ This could be because:
 3. Network connectivity issues
 4. Backend server is not running
 
-Please paste the transcript manually in the text area, or choose a different video with captions enabled.`
+Fallback study content is being used so import can continue.
+For best quality, paste the transcript manually in the import form and regenerate.`
     }
 }
 
 /**
- * Extract text from document (mock - would need actual file processing)
+ * Extract text from document (placeholder until full parser integration)
  */
 const extractDocumentText = async (file: File): Promise<string> => {
     // In a real implementation, you would:

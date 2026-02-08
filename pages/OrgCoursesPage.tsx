@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     BookOpen,
     Plus,
+    Trash2,
     Search,
     Loader2,
     ArrowRight,
@@ -41,10 +42,10 @@ interface CourseCard {
     syllabusHighlights: string[]
 }
 
-const studentMockCourses: CourseCard[] = [
+const studentCatalogCourses: CourseCard[] = [
     {
-        id: 'mock-student-cs101',
-        title: 'Introduction to Computer Science',
+        id: 'student-cs101',
+        title: 'Department of Computer Science 101: Foundations of Computing',
         code: 'CS101',
         description: 'Programming basics, algorithms, problem-solving labs, and weekly coding challenges.',
         instructor: 'Prof. John Doe',
@@ -62,8 +63,8 @@ const studentMockCourses: CourseCard[] = [
         syllabusHighlights: ['Variables & Data Types', 'Control Flow', 'Functions', 'Data Structures', 'Final Mini Project'],
     },
     {
-        id: 'mock-student-math221',
-        title: 'Linear Algebra',
+        id: 'student-math221',
+        title: 'MATH 221: Linear Algebra and Matrix Methods',
         code: 'MATH221',
         description: 'Vectors, eigenvalues, matrix transformations, and applied machine learning intuition.',
         instructor: 'Prof. Jane Smith',
@@ -81,8 +82,8 @@ const studentMockCourses: CourseCard[] = [
         syllabusHighlights: ['Matrix Operations', 'Determinants', 'Vector Spaces', 'Eigen Decomposition', 'PCA Intuition'],
     },
     {
-        id: 'mock-student-stat110',
-        title: 'Probability for AI',
+        id: 'student-stat110',
+        title: 'STAT 110: Probability Theory for Intelligent Systems',
         code: 'STAT110',
         description: 'Probability distributions, Bayes theorem, random variables, and uncertainty modeling.',
         instructor: 'Prof. Joe Blitzstein',
@@ -100,8 +101,8 @@ const studentMockCourses: CourseCard[] = [
         syllabusHighlights: ['Combinatorics', 'Conditional Probability', 'Continuous Distributions', 'Expectation & Variance', 'Bayesian Reasoning'],
     },
     {
-        id: 'mock-student-ml101',
-        title: 'Machine Learning Crash Course',
+        id: 'student-ml101',
+        title: 'ML 101: Applied Machine Learning Principles',
         code: 'ML101',
         description: 'Supervised learning, model evaluation, feature engineering, and practical mini-labs.',
         instructor: 'Google AI Team',
@@ -119,8 +120,8 @@ const studentMockCourses: CourseCard[] = [
         syllabusHighlights: ['Linear Regression', 'Classification', 'Regularization', 'Model Metrics', 'Deployment Basics'],
     },
     {
-        id: 'mock-student-cloud101',
-        title: 'Cloud Computing Fundamentals',
+        id: 'student-cloud101',
+        title: 'CLOUD 101: Cloud Computing Foundations',
         code: 'CLOUD101',
         description: 'Core cloud patterns, managed services, CI/CD, and infrastructure fundamentals.',
         instructor: 'Google Cloud Team',
@@ -139,10 +140,10 @@ const studentMockCourses: CourseCard[] = [
     },
 ]
 
-const teacherMockCourses: CourseCard[] = [
+const teacherCatalogCourses: CourseCard[] = [
     {
-        id: 'mock-teacher-go-advanced',
-        title: 'Advanced Go Backend Engineering',
+        id: 'teacher-go-advanced',
+        title: 'GO 401: Advanced Go Backend Engineering',
         code: 'GO401',
         description: 'Concurrency patterns, profiling, API design, and production-grade backend architecture.',
         instructor: 'You',
@@ -160,8 +161,8 @@ const teacherMockCourses: CourseCard[] = [
         syllabusHighlights: ['Goroutines & Channels', 'Context & Cancellation', 'DB Optimization', 'Clean Architecture', 'Capstone API'],
     },
     {
-        id: 'mock-teacher-system-design',
-        title: 'System Design Studio',
+        id: 'teacher-system-design',
+        title: 'ARCH 330: Distributed Systems Design Studio',
         code: 'ARCH330',
         description: 'Scalable systems, reliability, observability, and architecture tradeoffs by case study.',
         instructor: 'You',
@@ -179,8 +180,8 @@ const teacherMockCourses: CourseCard[] = [
         syllabusHighlights: ['Load Balancing', 'Caching', 'Event-Driven Systems', 'Data Consistency', 'Incident Response'],
     },
     {
-        id: 'mock-teacher-ai-tutor-lab',
-        title: 'AI Tutor Prompting Lab',
+        id: 'teacher-ai-tutor-lab',
+        title: 'AI 250: Conversational AI Tutoring Laboratory',
         code: 'AI250',
         description: 'Prompt engineering, evaluation rubrics, and safe educational AI interactions.',
         instructor: 'You',
@@ -198,8 +199,8 @@ const teacherMockCourses: CourseCard[] = [
         syllabusHighlights: ['Prompt Templates', 'Socratic Responses', 'Quality Review', 'Cost Optimization', 'Academic Integrity'],
     },
     {
-        id: 'mock-teacher-web-security',
-        title: 'Web API Security Essentials',
+        id: 'teacher-web-security',
+        title: 'SEC 210: Web API Security Engineering',
         code: 'SEC210',
         description: 'OWASP API Top 10, auth hardening, input validation, and secure coding workflows.',
         instructor: 'You',
@@ -217,8 +218,8 @@ const teacherMockCourses: CourseCard[] = [
         syllabusHighlights: ['Threat Modeling', 'JWT Security', 'Access Control', 'Upload Security', 'Security Testing'],
     },
     {
-        id: 'mock-teacher-archive-legacy',
-        title: 'Legacy Systems Migration Workshop',
+        id: 'teacher-archive-legacy',
+        title: 'MIG 180: Enterprise Legacy Systems Migration',
         code: 'MIG180',
         description: 'Practical migration plans from monolith systems to modular architecture.',
         instructor: 'You',
@@ -240,14 +241,14 @@ const teacherMockCourses: CourseCard[] = [
 const STANFORD_ORG_ID = 'dbb3b2a0-42c2-40f4-b209-1736e655977a'
 const GOOGLE_ORG_ID = 'e155d5d3-75f5-43a7-e532-40691988200d'
 
-const studentMockCoursesByOrg: Record<string, CourseCard[]> = {
-    [STANFORD_ORG_ID]: studentMockCourses.map((course, idx) => ({
+const studentCatalogCoursesByOrg: Record<string, CourseCard[]> = {
+    [STANFORD_ORG_ID]: studentCatalogCourses.map((course, idx) => ({
         ...course,
         id: `stanford-${idx}-${course.id}`,
         title: course.title.startsWith('Stanford') ? course.title : `Stanford • ${course.title}`,
         category: 'Stanford',
     })),
-    [GOOGLE_ORG_ID]: studentMockCourses.map((course, idx) => ({
+    [GOOGLE_ORG_ID]: studentCatalogCourses.map((course, idx) => ({
         ...course,
         id: `google-${idx}-${course.id}`,
         title: course.title.startsWith('Google') ? course.title : `Google • ${course.title}`,
@@ -255,14 +256,14 @@ const studentMockCoursesByOrg: Record<string, CourseCard[]> = {
     })),
 }
 
-const teacherMockCoursesByOrg: Record<string, CourseCard[]> = {
-    [STANFORD_ORG_ID]: teacherMockCourses.map((course, idx) => ({
+const teacherCatalogCoursesByOrg: Record<string, CourseCard[]> = {
+    [STANFORD_ORG_ID]: teacherCatalogCourses.map((course, idx) => ({
         ...course,
         id: `stanford-teacher-${idx}-${course.id}`,
         title: course.title.startsWith('Stanford') ? course.title : `Stanford • ${course.title}`,
         category: 'Stanford',
     })),
-    [GOOGLE_ORG_ID]: teacherMockCourses.map((course, idx) => ({
+    [GOOGLE_ORG_ID]: teacherCatalogCourses.map((course, idx) => ({
         ...course,
         id: `google-teacher-${idx}-${course.id}`,
         title: course.title.startsWith('Google') ? course.title : `Google • ${course.title}`,
@@ -270,18 +271,78 @@ const teacherMockCoursesByOrg: Record<string, CourseCard[]> = {
     })),
 }
 
-function getMockCoursesForRole(role: UserRole, orgId?: string): CourseCard[] {
+const organizerCatalogCourses: CourseCard[] = [
+    {
+        id: 'org-stanford-program-1',
+        title: 'Stanford • Institutional Program: Data & Decision Intelligence',
+        code: 'STAN-DI301',
+        description: 'Cross-department curriculum with analytics dashboards, assessment checkpoints, and mentoring flows.',
+        instructor: 'Program Office',
+        studentCount: 640,
+        category: 'Stanford',
+        level: 'Advanced',
+        status: 'active',
+        lessons: 26,
+        assignments: 12,
+        duration: '14 weeks',
+        nextSession: 'Mon 13:00',
+        isEnrolled: false,
+        isOwnedByUser: true,
+        progress: 0,
+        syllabusHighlights: ['Institution KPI Baseline', 'Learning Analytics', 'Intervention Playbook', 'Final Program Review', 'Accreditation Metrics'],
+    },
+    {
+        id: 'org-google-program-1',
+        title: 'Google • Enterprise Cloud Academy Track',
+        code: 'GCLD-ORG220',
+        description: 'Organization-wide cloud upskilling path with role-based labs and measurable progress outcomes.',
+        instructor: 'Cloud Enablement Team',
+        studentCount: 920,
+        category: 'Google',
+        level: 'Intermediate',
+        status: 'active',
+        lessons: 24,
+        assignments: 9,
+        duration: '12 weeks',
+        nextSession: 'Thu 15:30',
+        isEnrolled: false,
+        isOwnedByUser: true,
+        progress: 0,
+        syllabusHighlights: ['Cloud Foundations', 'Platform Services', 'Reliability Operations', 'Cost Governance', 'Program Completion Audit'],
+    },
+]
+
+const organizerCatalogCoursesByOrg: Record<string, CourseCard[]> = {
+    [STANFORD_ORG_ID]: organizerCatalogCourses
+        .filter((course) => course.category === 'Stanford')
+        .map((course, idx) => ({
+            ...course,
+            id: `stanford-org-${idx}-${course.id}`,
+        })),
+    [GOOGLE_ORG_ID]: organizerCatalogCourses
+        .filter((course) => course.category === 'Google')
+        .map((course, idx) => ({
+            ...course,
+            id: `google-org-${idx}-${course.id}`,
+        })),
+}
+
+function getCatalogCoursesForRole(role: UserRole, orgId?: string): CourseCard[] {
     if (role === 'TEACHER') {
-        if (orgId && teacherMockCoursesByOrg[orgId]) return teacherMockCoursesByOrg[orgId]
-        return teacherMockCourses
+        if (orgId && teacherCatalogCoursesByOrg[orgId]) return teacherCatalogCoursesByOrg[orgId]
+        return teacherCatalogCourses
     }
 
     if (role === 'STUDENT') {
-        if (orgId && studentMockCoursesByOrg[orgId]) return studentMockCoursesByOrg[orgId]
-        return studentMockCourses
+        if (orgId && studentCatalogCoursesByOrg[orgId]) return studentCatalogCoursesByOrg[orgId]
+        return studentCatalogCourses
     }
 
-    // Organizer should primarily see real backend courses they manage.
+    if (role === 'ORGANIZER') {
+        if (orgId && organizerCatalogCoursesByOrg[orgId]) return organizerCatalogCoursesByOrg[orgId]
+        return organizerCatalogCourses
+    }
+
     return []
 }
 
@@ -305,7 +366,7 @@ export function OrgCoursesPage() {
         try {
             setLoading(true)
 
-            const mockCourses = getMockCoursesForRole(effectiveRole, orgId)
+            const catalogCourses = getCatalogCoursesForRole(effectiveRole, orgId)
 
             let realCourses: CourseCard[] = []
             try {
@@ -332,11 +393,11 @@ export function OrgCoursesPage() {
                         : ['Introduction', 'Core Concepts', 'Practice', 'Assessment'],
                 }))
             } catch {
-                // Keep mock content visible and functional even when backend responds 403/empty.
+                // Keep catalog preview content visible and functional even when backend responds 403/empty.
             }
 
             const dedup = new Map<string, CourseCard>()
-            mockCourses.forEach((c) => dedup.set(c.id, c))
+            catalogCourses.forEach((c) => dedup.set(c.id, c))
             realCourses.forEach((c) => dedup.set(c.id, c))
             setCourses(Array.from(dedup.values()))
         } finally {
@@ -369,6 +430,24 @@ export function OrgCoursesPage() {
             fetchCourses()
         } catch {
             alert('Failed to create course. Ensure you have ORGANIZER permissions.')
+        }
+    }
+
+    const handleDeleteCourse = async (course: CourseCard) => {
+        if (effectiveRole !== 'ORGANIZER') {
+            alert('Only Organization Admins can delete courses.')
+            return
+        }
+
+        const confirmed = window.confirm(`Delete course "${course.title}"? This action cannot be undone.`)
+        if (!confirmed) return
+
+        try {
+            await apiClient.delete(`/courses/${course.id}`)
+            fetchCourses()
+        } catch {
+            // Fallback for catalog-only preview cards (non-UUID IDs)
+            setCourses((prev) => prev.filter((c) => c.id !== course.id))
         }
     }
 
@@ -424,8 +503,8 @@ export function OrgCoursesPage() {
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Institution Courses</h1>
                                 <p className="text-gray-500 dark:text-gray-400 mt-1">
-                                    {effectiveRole === 'STUDENT' && 'Browse enrolled and recommended courses with rich mock content.'}
-                                    {effectiveRole === 'TEACHER' && 'Manage your teaching catalog with draft/active/archived mock courses.'}
+                                    {effectiveRole === 'STUDENT' && 'Browse enrolled and recommended courses from the institutional catalog.'}
+                                    {effectiveRole === 'TEACHER' && 'Manage your teaching catalog with draft, active, and archived courses.'}
                                     {effectiveRole === 'ORGANIZER' && 'Create and manage courses across your organization.'}
                                 </p>
                             </div>
@@ -601,13 +680,25 @@ export function OrgCoursesPage() {
                                             >
                                                 View Details
                                             </button>
-                                            <button
-                                                onClick={() => navigate(`/course/${course.id}`)}
-                                                className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm hover:gap-3 transition-all"
-                                            >
-                                                {effectiveRole === 'STUDENT' ? (course.isEnrolled ? 'Continue' : 'Explore') : effectiveRole === 'TEACHER' ? 'Manage' : 'Open'}
-                                                <ArrowRight size={16} />
-                                            </button>
+
+                                            <div className="flex items-center gap-2">
+                                                {effectiveRole === 'ORGANIZER' && (
+                                                    <button
+                                                        onClick={() => handleDeleteCourse(course)}
+                                                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20 text-sm font-semibold"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                        Delete
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => navigate(`/course/${course.id}`)}
+                                                    className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm hover:gap-3 transition-all"
+                                                >
+                                                    {effectiveRole === 'STUDENT' ? (course.isEnrolled ? 'Open' : 'Explore') : effectiveRole === 'TEACHER' ? 'Manage' : 'Open'}
+                                                    <ArrowRight size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>

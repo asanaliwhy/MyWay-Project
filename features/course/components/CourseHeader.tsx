@@ -61,31 +61,6 @@ export function CourseHeader({ course, role }: CourseHeaderProps) {
           )}
         </div>
 
-        <div className="flex gap-3">
-          <motion.button
-            whileHover={{
-              scale: 1.02,
-            }}
-            whileTap={{
-              scale: 0.98,
-            }}
-            className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            Syllabus
-          </motion.button>
-
-          <motion.button
-            whileHover={{
-              scale: 1.02,
-            }}
-            whileTap={{
-              scale: 0.98,
-            }}
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-          >
-            Continue
-          </motion.button>
-        </div>
       </div>
     </motion.div>
   )

@@ -34,41 +34,65 @@ export function useNotifications() {
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = useState<Notification[]>([])
 
+    const sanitizeText = (value: string) =>
+        value
+            .replace(/\bsex\b/gi, 'lesson')
+            .trim()
+
     // Load from localStorage on mount
     useEffect(() => {
         const saved = localStorage.getItem('myway_notifications')
         if (saved) {
             try {
-                setNotifications(JSON.parse(saved))
+                const parsed = JSON.parse(saved)
+                if (Array.isArray(parsed)) {
+                    const sanitized = parsed
+                        .map((item: any) => ({
+                            ...item,
+                            title: sanitizeText(String(item?.title || 'Notification')),
+                            message: sanitizeText(String(item?.message || '')),
+                        }))
+                    setNotifications(sanitized)
+                    localStorage.setItem('myway_notifications', JSON.stringify(sanitized))
+                }
             } catch (e) {
                 console.error('Failed to parse notifications', e)
             }
         } else {
-            // Initial mock data if empty
+            // Initial seed data if empty
             const initialData: Notification[] = [
                 {
                     id: '1',
-                    title: 'New Course Available',
-                    message: 'Physics 101: Gravity & Motion is now live.',
+                    title: 'Course Milestone Updated',
+                    message: 'Cloud Computing Fundamentals unlocked Module 2: Cloud Infrastructure.',
                     type: 'info',
+                    time: '45 minutes ago',
+                    read: false,
+                    createdAt: Date.now() - 2700000
+                },
+                {
+                    id: '2',
+                    title: 'Assignment Deadline Reminder',
+                    message: 'Linear Algebra Practice Set 3 is due tomorrow at 11:59 PM.',
+                    type: 'warning',
                     time: '2 hours ago',
                     read: false,
                     createdAt: Date.now() - 7200000
                 },
                 {
-                    id: '2',
-                    title: 'Assignment Due Soon',
-                    message: 'Free Fall Lab Report is due tomorrow at 11:59 PM.',
-                    type: 'warning',
+                    id: '3',
+                    title: 'Quiz Result Published',
+                    message: 'Probability Quiz 2 has been graded. You scored 86%.',
+                    type: 'success',
                     time: '5 hours ago',
                     read: false,
                     createdAt: Date.now() - 18000000
                 },
                 {
-                    id: '3',
-                    title: 'Submission Graded',
-                    message: 'Your quiz "Introduction to Free Fall" has been graded.',
-                    type: 'success',
+                    id: '4',
+                    title: 'Discussion Reply Received',
+                    message: 'An instructor replied to your thread in AI Tutor Prompting Lab.',
+                    type: 'info',
                     time: '1 day ago',
                     read: false,
                     createdAt: Date.now() - 86400000

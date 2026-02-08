@@ -95,12 +95,15 @@ func main() {
 		// Organizations
 		api.POST("/organizations", orgHandler.CreateOrganization)
 		api.GET("/organizations", orgHandler.GetOrganizations)
+		api.DELETE("/organizations/:id", orgHandler.DeleteOrganization)
+		api.POST("/organizations/:id/delete", orgHandler.DeleteOrganization)
 		api.POST("/organizations/:id/join", orgHandler.JoinOrganization)
 		api.POST("/organizations/:id/invite", orgHandler.InviteToOrganization)
 		api.POST("/organizations/:id/switch", orgHandler.SwitchOrganization)
 
 		// Courses
 		api.POST("/courses", courseHandler.CreateCourse)
+		api.DELETE("/courses/:id", courseHandler.DeleteCourse)
 		api.GET("/courses/:id", courseHandler.GetCourse)
 		api.GET("/courses/org/:orgId", courseHandler.GetCoursesByOrg)
 

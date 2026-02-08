@@ -16,6 +16,7 @@ interface SubmissionState {
         attachmentName?: string
         grade?: string
     }
+    returnTo?: string
 }
 
 export function AssignmentSubmissionPage() {
@@ -24,6 +25,15 @@ export function AssignmentSubmissionPage() {
     const location = useLocation()
 
     const assignment = (location.state as SubmissionState | null)?.assignment
+    const returnTo = (location.state as SubmissionState | null)?.returnTo
+
+    const handleBack = () => {
+        if (returnTo) {
+            navigate(returnTo)
+            return
+        }
+        navigate(`/course/${courseId || 'unknown'}?tab=assignments`)
+    }
 
     const fallbackTitle = useMemo(() => {
         if (!assignmentId) return 'Assignment Submission'
@@ -40,7 +50,7 @@ export function AssignmentSubmissionPage() {
 
             <main className="flex-1 max-w-4xl mx-auto w-full p-4 md:p-8">
                 <button
-                    onClick={() => navigate(`/course/${courseId || 'unknown'}`)}
+                    onClick={handleBack}
                     className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 mb-5"
                 >
                     <ArrowLeft size={16} />
