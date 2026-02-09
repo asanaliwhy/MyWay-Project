@@ -42,6 +42,9 @@ export function OrgSelectorPage() {
   const canCreateOrganization = (user?.role || '').toUpperCase() === 'ORGANIZER'
   const [deleteTarget, setDeleteTarget] = useState<Organization | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createName, setCreateName] = useState('')
+  const [createBusy, setCreateBusy] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const normalizeOrganizationName = (rawName: string) => {
@@ -155,7 +158,7 @@ export function OrgSelectorPage() {
 
   const pushToast = (next: ToastState) => setToast(next)
 
-  const handleCreateOrg = async () => {
+  const handleCreateOrg = () => {
     if (!canCreateOrganization) {
       pushToast({
         tone: 'error',
@@ -165,13 +168,36 @@ export function OrgSelectorPage() {
       return
     }
 
-    const name = prompt('Enter Organization Name:')
-    if (!name) return
+    setCreateName('')
+    setCreateOpen(true)
+  }
+
+  const confirmCreateOrganization = async () => {
+    const name = createName.trim()
+    if (!name) {
+      pushToast({
+        tone: 'error',
+        title: 'Name required',
+        message: 'Please enter an organization name.',
+      })
+      return
+    }
+
+    setCreateBusy(true)
     try {
       await apiClient.post('/organizations', { name })
-      fetchOrgs()
+      setCreateOpen(false)
+      setCreateName('')
+      await fetchOrgs()
+      pushToast({
+        tone: 'success',
+        title: 'Organization created',
+        message: `"${name}" is ready to use.`,
+      })
     } catch (err) {
       pushToast({ tone: 'error', title: 'Create failed', message: 'Failed to create organization.' })
+    } finally {
+      setCreateBusy(false)
     }
   }
 
@@ -326,6 +352,86 @@ export function OrgSelectorPage() {
           </motion.div>
         </main>
       </div>
+
+      {createOpen && (
+        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            className="w-full max-w-md rounded-2xl border border-indigo-200/60 dark:border-indigo-900/40 bg-white dark:bg-gray-900 shadow-2xl"
+          >
+            <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+                  <Plus size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Create organization</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Start a new workspace for your members and courses.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!createBusy) {
+                    setCreateOpen(false)
+                    setCreateName('')
+                  }
+                }}
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                disabled={createBusy}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                void confirmCreateOrganization()
+              }}
+              className="p-5"
+            >
+              <label htmlFor="create-org-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Organization name
+              </label>
+              <input
+                id="create-org-name"
+                type="text"
+                value={createName}
+                onChange={(event) => setCreateName(event.target.value)}
+                placeholder="e.g. Google Learning"
+                maxLength={80}
+                autoFocus
+                disabled={createBusy}
+                className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+              />
+
+              <div className="flex justify-end gap-2 mt-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreateOpen(false)
+                    setCreateName('')
+                  }}
+                  disabled={createBusy}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createBusy}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                >
+                  {createBusy ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
+                  Create
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
 
       {deleteTarget && (
         <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
