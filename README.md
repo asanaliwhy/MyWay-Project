@@ -626,7 +626,7 @@ resp, _ := http.Get(captionURL)
 
 ### AI Content Generation
 
-The system uses **Google Gemini 1.5 Flash** for fast, affordable generation:
+The system uses **Google Gemini 3 Flash** for fast, affordable generation:
 
 ```go
 // Summary Generation Prompt
